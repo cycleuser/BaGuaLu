@@ -1,0 +1,9 @@
+include README.md
+include LICENSE
+include pyproject.toml
+recursive-include bagualu *.py
+recursive-include bagualu *.yaml
+recursive-include bagualu *.json
+recursive-include tests *.py
+recursive-include docs *.md
+recursive-include examples *.py
