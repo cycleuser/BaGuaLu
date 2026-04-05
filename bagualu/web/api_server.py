@@ -4,15 +4,21 @@ from __future__ import annotations
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
 from typing import Any, Dict, List, Optional
 
+from bagualu.web.web_ui import get_web_ui_html
 from bagualu.utils.logging import Logger
 
 logger = Logger.get_logger(__name__)
 
 
-app = FastAPI(title="BaGuaLu API", version="0.1.0")
+app = FastAPI(
+    title="BaGuaLu API",
+    version="0.1.0",
+    description="Intelligent Agent Orchestration Platform"
+)
 
 app.add_middleware(
     CORSMiddleware,
@@ -69,9 +75,55 @@ class APIServer:
     def _setup_routes(self) -> None:
         """Setup API routes."""
 
-        @app.get("/")
-        async def root():
-            return {"message": "BaGuaLu API", "version": "0.1.0"}
+@app.get("/")
+async def root():
+    return {
+        "message": "BaGuaLu API",
+        "version": "0.1.0",
+        "docs": "/docs",
+        "openapi": "/openapi.json"
+    }
+
+
+@app.get("/models", response_model=Dict[str, Any])
+        async def list_models():
+            """List available models."""
+            provider_config = await self._core.config.get_active_provider_config()
+            
+            models = []
+            if provider_config:
+                models.append({
+                    "id": provider_config.model or "default",
+                    "object": "model",
+                    "owned_by": provider_config.name
+                })
+            
+            return {"object": "list", "data": models}
+        
+        @app.get("/v1/models", response_model=Dict[str, Any])
+        async def list_models_v1():
+            """List available models (OpenAI compatible)."""
+            provider_config = await self._core.config.get_active_provider_config()
+            
+            models = []
+            if provider_config and provider_config.model:
+                models.append({
+                    "id": provider_config.model,
+                    "object": "model",
+                    "created": 1700000000,
+                    "owned_by": provider_config.name
+                })
+            
+            for provider_name, provider in self._core.config.providers.providers.items():
+                if provider.model and provider.enabled and provider.model not in [m["id"] for m in models]:
+                    models.append({
+                        "id": provider.model,
+                        "object": "model",
+                        "created": 1700000000,
+                        "owned_by": provider_name
+                    })
+            
+            return {"object": "list", "data": models}
 
         @app.post("/workflows")
         async def create_workflow(config: WorkflowConfig):
@@ -113,6 +165,16 @@ class APIServer:
         async def evolve_skill(skill_name: str):
             evolved = await self._core.evolve_skill(skill_name)
             return {"evolved": evolved}
+        
+        @app.get("/ui", response_class=HTMLResponse)
+        async def web_ui():
+            """Get web UI."""
+            return get_web_ui_html()
+        
+        @app.get("/", response_class=HTMLResponse)
+        async def root():
+            """Root endpoint - Web UI."""
+            return get_web_ui_html()
 
     def run_server(
         self,
