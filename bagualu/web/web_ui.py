@@ -404,25 +404,74 @@ def get_web_ui_html() -> str:
         }
 
         function loadSkill() {
-            alert('Skill loading feature coming soon!');
+            const name = prompt('Skill name:');
+            const path = prompt('Skill file path (optional):');
+            if (name) {
+                const body = path ? {name, skill_path: path} : {name};
+                fetch(API_BASE + '/skills', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(body)
+                }).then(() => {
+                    alert('Skill loaded successfully!');
+                    refreshSkills();
+                }).catch(err => {
+                    alert('Failed to load skill: ' + err.message);
+                });
+            }
         }
 
         function evolveSkill() {
             const skillName = prompt('Skill name to evolve:');
             if (skillName) {
                 fetch(API_BASE + '/skills/' + skillName + '/evolve', {method: 'POST'})
-                    .then(() => refreshSkills());
+                    .then(() => {
+                        alert('Skill evolution triggered!');
+                        refreshSkills();
+                    });
             }
         }
 
         function terminateAgent(agentId) {
             if (confirm('Terminate this agent?')) {
-                alert('Agent termination feature coming soon!');
+                fetch(API_BASE + '/agents/' + agentId, {method: 'DELETE'})
+                    .then(() => {
+                        alert('Agent terminated!');
+                        refreshAgents();
+                    })
+                    .catch(err => {
+                        alert('Failed to terminate agent: ' + err.message);
+                    });
             }
         }
 
         function createWorkflow() {
-            alert('Workflow creation feature coming soon!');
+            const name = prompt('Workflow name:');
+            if (name) {
+                const nodes = [
+                    {
+                        id: 'node-1',
+                        role: 'executor',
+                        instruction: 'Initial task',
+                        inputs: {},
+                        dependencies: []
+                    }
+                ];
+                const edges = [];
+
+                fetch(API_BASE + '/workflows', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({name, nodes, edges})
+                }).then(response => response.json())
+                  .then(data => {
+                      alert('Workflow created with ID: ' + data.workflow_id);
+                      refreshWorkflows();
+                  })
+                  .catch(err => {
+                      alert('Failed to create workflow: ' + err.message);
+                  });
+            }
         }
 
         function saveWorkflow() {

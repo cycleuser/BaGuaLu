@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 from typing import Any
 
-from bagualu.agents.base import AgentContext, AgentRole, BaseAgent
+from bagualu.agents.base import AgentContext, AgentRole, AgentStatus, BaseAgent
 from bagualu.utils.logging import Logger
 
 logger = Logger.get_logger(__name__)
@@ -74,9 +74,7 @@ class ExecutorAgent(BaseAgent):
         )
 
         self._context = context
-        await self.update_status(
-            self._status.RUNNING if hasattr(self._status, "RUNNING") else "running"
-        )
+        await self.update_status(AgentStatus.RUNNING)
 
         try:
             result = await self._execute_with_skills(instruction, inputs)
@@ -94,9 +92,7 @@ class ExecutorAgent(BaseAgent):
 
             self._update_success_rate(True)
 
-            await self.update_status(
-                self._status.READY if hasattr(self._status, "READY") else "ready"
-            )
+            await self.update_status(AgentStatus.READY)
             self.increment_step()
 
             return result
@@ -115,9 +111,7 @@ class ExecutorAgent(BaseAgent):
 
             self._update_success_rate(False)
 
-            await self.update_status(
-                self._status.ERROR if hasattr(self._status, "ERROR") else "error"
-            )
+            await self.update_status(AgentStatus.ERROR)
 
             return {
                 "success": False,
@@ -267,7 +261,7 @@ class ExecutorAgent(BaseAgent):
         if not failures:
             return None
 
-        failure_patterns = {}
+        failure_patterns: dict[str, int] = {}
         for failure in failures:
             error = failure.get("error", "unknown")
             failure_patterns[error] = failure_patterns.get(error, 0) + 1

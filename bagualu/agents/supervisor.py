@@ -235,7 +235,7 @@ class SupervisorAgent(BaseAgent):
         Returns:
             Monitoring results
         """
-        monitoring_result = {
+        monitoring_result: dict[str, Any] = {
             "agents_monitored": len(self._supervised_agents),
             "agent_statuses": {},
             "alerts": [],
@@ -278,7 +278,7 @@ class SupervisorAgent(BaseAgent):
         Returns:
             Optimization suggestions
         """
-        optimization = {
+        optimization: dict[str, Any] = {
             "suggestions": [],
             "estimated_improvement": 0.0,
         }

@@ -74,6 +74,7 @@ class AgentCluster:
 
         agent_role = AgentRole(role.lower())
 
+        agent: BaseAgent
         if agent_role == AgentRole.EXECUTOR:
             agent = ExecutorAgent(
                 name=name,
@@ -191,8 +192,9 @@ class AgentCluster:
 
                 self._connections[from_id].add(to_id)
 
-                if isinstance(self._agents.get(from_id), SupervisorAgent):
-                    self._agents[from_id].add_supervised_agent(to_id)
+                from_agent = self._agents.get(from_id)
+                if isinstance(from_agent, SupervisorAgent):
+                    from_agent.add_supervised_agent(to_id)
 
                 logger.info(f"Connected {from_name} -> {to_name}")
 

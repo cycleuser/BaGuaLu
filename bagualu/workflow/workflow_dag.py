@@ -64,9 +64,9 @@ class WorkflowDAG:
         logger.info(f"Workflow DAG created: {name} ({len(nodes)} nodes)")
 
     def compute_execution_order(self) -> list[list[WorkflowNode]]:
-        levels = []
-        remaining_ids = set(n.id for n in self.nodes)
-        completed_ids = set()
+        levels: list[list[WorkflowNode]] = []
+        remaining_ids: set[str] = set(n.id for n in self.nodes)
+        completed_ids: set[str] = set()
 
         while remaining_ids:
             ready_ids = [

@@ -86,7 +86,7 @@ class SchedulerAgent(BaseAgent):
 
         self._strategy = strategy
         self._max_concurrent_tasks = max_concurrent_tasks
-        self._task_queue: list[ScheduledTask] = []
+        self._task_queue: list[tuple[int, ScheduledTask]] = []
         self._active_tasks: dict[str, ScheduledTask] = {}
         self._completed_tasks: list[ScheduledTask] = []
         self._resource_pool: dict[str, set[str]] = {}
@@ -155,10 +155,10 @@ class SchedulerAgent(BaseAgent):
         if self._strategy == SchedulingStrategy.PRIORITY:
             heapq.heappush(
                 self._task_queue,
-                (scheduled_task.priority.value, scheduled_task),
+                (int(scheduled_task.priority.value), scheduled_task),
             )
         else:
-            self._task_queue.append(scheduled_task)
+            self._task_queue.append((int(scheduled_task.priority.value), scheduled_task))
 
         logger.info(
             f"Task {scheduled_task.task_id} scheduled with priority {scheduled_task.priority.name}"
@@ -277,11 +277,16 @@ class SchedulerAgent(BaseAgent):
             return None
 
         if self._strategy == SchedulingStrategy.PRIORITY:
-            priority, task = heapq.heappop(self._task_queue)
-            return task
+            if self._task_queue:
+                priority, task = heapq.heappop(self._task_queue)
+                return task
+            return None
 
         if self._strategy == SchedulingStrategy.FIFO:
-            return self._task_queue.pop(0)
+            if self._task_queue:
+                _, task = self._task_queue.pop(0)
+                return task
+            return None
 
         if self._strategy == SchedulingStrategy.DEADLINE:
             sorted_tasks = sorted(
@@ -296,7 +301,10 @@ class SchedulerAgent(BaseAgent):
                 heapq.heapify(self._task_queue)
                 return task
 
-        return self._task_queue.pop(0)
+        if self._task_queue:
+            _, task = self._task_queue.pop(0)
+            return task
+        return None
 
     async def _general_scheduling(
         self,
@@ -362,7 +370,9 @@ class SchedulerAgent(BaseAgent):
             return None
 
         total_time = sum(
-            (t.completed_at - t.scheduled_at).total_seconds() for t in completed_with_times
+            (t.completed_at - t.scheduled_at).total_seconds()
+            for t in completed_with_times
+            if t.completed_at and t.scheduled_at
         )
 
         return timedelta(seconds=total_time / len(completed_with_times))
@@ -413,7 +423,7 @@ class SchedulerAgent(BaseAgent):
         Returns:
             Optimization analysis
         """
-        analysis = {
+        analysis: dict[str, Any] = {
             "current_strategy": self._strategy.value,
             "performance_metrics": {},
             "recommendation": None,

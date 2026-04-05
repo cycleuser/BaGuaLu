@@ -7,7 +7,12 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from bagualu.skills.evolver import EvolutionTrigger, EvolutionType, SkillEvolver
+from bagualu.skills.evolver import (
+    EvolutionContext,
+    EvolutionTrigger,
+    EvolutionType,
+    SkillEvolver,
+)
 from bagualu.skills.registry import SkillRegistry
 from bagualu.skills.store import SkillStore
 from bagualu.utils.logging import Logger
@@ -93,14 +98,15 @@ class SkillEngine:
             Skill definition or None
         """
         if skill_name in self._skill_cache:
-            return self._skill_cache[skill_name]
+            cached: dict[str, Any] = self._skill_cache[skill_name]
+            return cached
 
         skill_def = await self._registry.get_skill(skill_name)
 
         if skill_def:
             self._skill_cache[skill_name] = skill_def
 
-        return skill_def
+        return skill_def if skill_def else None
 
     async def find_relevant_skills(
         self,
@@ -146,7 +152,7 @@ class SkillEngine:
 
         execution_id = f"exec-{datetime.now().timestamp()}"
 
-        execution_record = {
+        execution_record: dict[str, Any] = {
             "id": execution_id,
             "skill": skill_name,
             "inputs": inputs,
@@ -243,12 +249,13 @@ class SkillEngine:
 
         evo_type = EvolutionType(evolution_type.upper())
 
-        evolution_context = {
-            "skill_name": skill_name,
-            "skill_def": skill_def,
-            "trigger": trigger,
-            "execution_history": self._execution_history[-10:],
-        }
+        evolution_context = EvolutionContext(
+            skill_name=skill_name,
+            skill_def=skill_def,
+            trigger=trigger,
+            evolution_type=evo_type,
+            execution_history=self._execution_history[-10:],
+        )
 
         evolved = await self._evolver.evolve(evolution_context, evo_type)
 
@@ -258,7 +265,7 @@ class SkillEngine:
 
             logger.info(f"Skill {skill_name} evolved successfully")
 
-        return evolved
+        return bool(evolved)
 
     async def _determine_evolution_type(
         self,

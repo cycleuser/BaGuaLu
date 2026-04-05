@@ -3,35 +3,13 @@
 from __future__ import annotations
 
 import asyncio
-from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any
 
 from bagualu.utils.logging import Logger
-from bagualu.workflow.workflow_dag import WorkflowDAG
+from bagualu.workflow.workflow_dag import WorkflowDAG, WorkflowEdge, WorkflowNode
 
 logger = Logger.get_logger(__name__)
-
-
-@dataclass
-class WorkflowNode:
-    """Workflow node representing an agent task."""
-
-    id: str
-    agent_role: str
-    instruction: str
-    inputs: dict[str, Any] = field(default_factory=dict)
-    dependencies: list[str] = field(default_factory=list)
-    priority: int = 5
-
-
-@dataclass
-class WorkflowEdge:
-    """Workflow edge representing connection between nodes."""
-
-    from_node: str
-    to_node: str
-    condition: str | None = None
 
 
 class WorkflowEngine:
@@ -81,9 +59,9 @@ class WorkflowEngine:
         """
         workflow_id = workflow_config.get("id", f"workflow-{datetime.now().timestamp()}")
 
-        nodes = [
+        nodes: list[WorkflowNode] = [
             WorkflowNode(
-                id=node.get("id"),
+                id=node.get("id", ""),
                 agent_role=node.get("role", "executor"),
                 instruction=node.get("instruction", ""),
                 inputs=node.get("inputs", {}),
@@ -93,10 +71,10 @@ class WorkflowEngine:
             for node in workflow_config.get("nodes", [])
         ]
 
-        edges = [
+        edges: list[WorkflowEdge] = [
             WorkflowEdge(
-                from_node=edge.get("from"),
-                to_node=edge.get("to"),
+                from_node=edge.get("from", ""),
+                to_node=edge.get("to", ""),
                 condition=edge.get("condition"),
             )
             for edge in workflow_config.get("edges", [])
@@ -113,7 +91,7 @@ class WorkflowEngine:
 
         logger.info(f"Created workflow: {workflow_id}")
 
-        return workflow_id
+        return str(workflow_id)
 
     async def execute(
         self,
@@ -139,7 +117,7 @@ class WorkflowEngine:
 
         execution_id = f"exec-{datetime.now().timestamp()}"
 
-        execution_record = {
+        execution_record: dict[str, Any] = {
             "id": execution_id,
             "workflow_id": workflow_id,
             "inputs": inputs,
@@ -186,7 +164,7 @@ class WorkflowEngine:
         """
         execution_order = workflow.compute_execution_order()
 
-        results = {}
+        results: dict[str, Any] = {}
 
         for level_nodes in execution_order:
             level_results = await asyncio.gather(
@@ -201,7 +179,7 @@ class WorkflowEngine:
                         "error": str(result),
                     }
                 else:
-                    results[node.id] = result
+                    results[node.id] = result if isinstance(result, dict) else {}
 
         return {
             "success": True,
@@ -249,7 +227,11 @@ class WorkflowEngine:
                 inputs=node_inputs,
             )
 
-            return result
+            return (
+                result
+                if isinstance(result, dict)
+                else {"success": False, "error": "Invalid result"}
+            )
 
         return {
             "success": False,

@@ -9,7 +9,7 @@ import sys
 class Logger:
     """Logger wrapper."""
 
-    _loggers: dict = {}
+    _loggers: dict[str, logging.Logger] = {}
 
     @classmethod
     def get_logger(

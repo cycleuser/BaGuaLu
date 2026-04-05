@@ -143,19 +143,21 @@ class ConfigManager:
         """Save configuration to file."""
         self._config_path.parent.mkdir(parents=True, exist_ok=True)
 
-        config_data = {
+        config_data: dict[str, Any] = {
             "providers": {},
             "active_provider": self._providers.active_provider,
             "settings": self._settings,
         }
 
         for provider_name, provider in self._providers.providers.items():
-            config_data["providers"][provider_name] = {
-                "api_key": provider.api_key,
-                "base_url": provider.base_url,
-                "model": provider.model,
-                "enabled": provider.enabled,
-            }
+            providers_dict = config_data["providers"]
+            if isinstance(providers_dict, dict):
+                providers_dict[provider_name] = {
+                    "api_key": provider.api_key,
+                    "base_url": provider.base_url,
+                    "model": provider.model,
+                    "enabled": provider.enabled,
+                }
 
         content = yaml.dump(config_data, default_flow_style=False)
 

@@ -94,7 +94,7 @@ class BaseTool(ABC):
         Returns:
             JSON schema dictionary
         """
-        schema = {
+        schema: dict[str, Any] = {
             "name": self.name,
             "description": self.description,
         }

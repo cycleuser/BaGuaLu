@@ -45,7 +45,7 @@ class SkillStore:
 
         self._db_path.parent.mkdir(parents=True, exist_ok=True)
 
-        self._db = sqlite3.connect(str(self._db_path))
+        self._db = sqlite3.connect(str(self._db_path), check_same_thread=False)
 
         await self._create_tables()
 
@@ -55,6 +55,8 @@ class SkillStore:
 
     async def _create_tables(self) -> None:
         """Create database tables."""
+        if not self._db:
+            raise RuntimeError("Database not initialized")
         cursor = self._db.cursor()
 
         cursor.execute("""
@@ -103,6 +105,8 @@ class SkillStore:
             )
         """)
 
+        if not self._db:
+            raise RuntimeError("Database not initialized")
         self._db.commit()
 
         logger.info("Database tables created")
@@ -128,6 +132,8 @@ class SkillStore:
 
         now = datetime.now().isoformat()
 
+        if not self._db:
+            raise RuntimeError("Database not initialized")
         cursor = self._db.cursor()
 
         cursor.execute(
@@ -176,6 +182,8 @@ class SkillStore:
             ),
         )
 
+        if not self._db:
+            raise RuntimeError("Database not initialized")
         self._db.commit()
 
         logger.info(f"Registered skill: {skill_id}")
@@ -199,6 +207,8 @@ class SkillStore:
         if not self._db:
             await self.initialize()
 
+        if not self._db:
+            raise RuntimeError("Database not initialized")
         cursor = self._db.cursor()
 
         if version:
@@ -223,7 +233,8 @@ class SkillStore:
         row = cursor.fetchone()
 
         if row:
-            return json.loads(row[0])
+            result: dict[str, Any] = json.loads(row[0])
+            return result
 
         return None
 
@@ -249,6 +260,8 @@ class SkillStore:
         parent_version = new_skill_def.get("parent_version")
 
         if parent_version:
+            if not self._db:
+                raise RuntimeError("Database not initialized")
             cursor = self._db.cursor()
 
             cursor.execute(
@@ -267,6 +280,8 @@ class SkillStore:
                 ),
             )
 
+            if not self._db:
+                raise RuntimeError("Database not initialized")
             self._db.commit()
 
         logger.info(f"Updated skill: {skill_name} to version {new_skill_def.get('version')}")
@@ -288,6 +303,8 @@ class SkillStore:
         if not self._db:
             await self.initialize()
 
+        if not self._db:
+            raise RuntimeError("Database not initialized")
         cursor = self._db.cursor()
 
         cursor.execute(
@@ -336,6 +353,8 @@ class SkillStore:
         if not self._db:
             await self.initialize()
 
+        if not self._db:
+            raise RuntimeError("Database not initialized")
         cursor = self._db.cursor()
 
         cursor.execute(
@@ -356,6 +375,8 @@ class SkillStore:
             ),
         )
 
+        if not self._db:
+            raise RuntimeError("Database not initialized")
         self._db.commit()
 
     async def get_metrics(
@@ -375,6 +396,8 @@ class SkillStore:
         if not self._db:
             await self.initialize()
 
+        if not self._db:
+            raise RuntimeError("Database not initialized")
         cursor = self._db.cursor()
 
         if version:
@@ -428,6 +451,8 @@ class SkillStore:
         if not self._db:
             await self.initialize()
 
+        if not self._db:
+            raise RuntimeError("Database not initialized")
         cursor = self._db.cursor()
 
         cursor.execute(
@@ -464,6 +489,8 @@ class SkillStore:
 
             removed_ids.append(version_id)
 
+        if not self._db:
+            raise RuntimeError("Database not initialized")
         self._db.commit()
 
         logger.info(f"Cleaned up {len(removed_ids)} versions for {skill_name}")
@@ -479,6 +506,8 @@ class SkillStore:
         if not self._db:
             await self.initialize()
 
+        if not self._db:
+            raise RuntimeError("Database not initialized")
         cursor = self._db.cursor()
 
         cursor.execute("""

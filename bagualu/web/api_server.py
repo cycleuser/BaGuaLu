@@ -47,6 +47,14 @@ class AgentConfig(BaseModel):
     skills: list[str] | None = None
 
 
+class SkillConfig(BaseModel):
+    """Skill configuration model."""
+
+    name: str
+    skill_path: str | None = None
+    definition: dict[str, Any] | None = None
+
+
 _core_instance: Any = None
 
 
@@ -135,7 +143,7 @@ async def create_workflow(config: WorkflowConfig):
     global _core_instance
     if not _core_instance:
         raise HTTPException(status_code=500, detail="Core not initialized")
-    workflow_id = await _core_instance.create_workflow(config.dict())
+    workflow_id = await _core_instance.create_workflow(config.model_dump())
     return {"workflow_id": workflow_id}
 
 
@@ -183,6 +191,38 @@ async def list_agents():
         raise HTTPException(status_code=500, detail="Core not initialized")
     status = await _core_instance.cluster.get_cluster_status()
     return status
+
+
+@app.delete("/agents/{agent_id}")
+async def terminate_agent(agent_id: str):
+    """Terminate an agent."""
+    global _core_instance
+    if not _core_instance:
+        raise HTTPException(status_code=500, detail="Core not initialized")
+    success = await _core_instance.cluster.terminate_agent(agent_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="Agent not found")
+    return {"success": True, "agent_id": agent_id}
+
+
+@app.post("/skills")
+async def load_skill(config: SkillConfig):
+    """Load a skill."""
+    global _core_instance
+    if not _core_instance:
+        raise HTTPException(status_code=500, detail="Core not initialized")
+
+    if config.skill_path:
+        skill_def = await _core_instance.skills.load_skill(config.skill_path)
+        if not skill_def:
+            raise HTTPException(status_code=400, detail="Failed to load skill from path")
+        return {"skill": skill_def, "name": config.name}
+    elif config.definition:
+        skill_id = await _core_instance.skills._store.register_skill(config.definition)
+        _core_instance.skills._skill_cache[config.name] = config.definition
+        return {"skill_id": skill_id, "name": config.name}
+    else:
+        raise HTTPException(status_code=400, detail="Either skill_path or definition required")
 
 
 @app.get("/skills")

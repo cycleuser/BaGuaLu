@@ -215,9 +215,9 @@ class BaseAgent(ABC):
 
         description = ""
         instructions = ""
-        triggers = []
-        parameters = {}
-        examples = []
+        triggers: list[str] = []
+        parameters: dict[str, Any] = {}
+        examples: list[str] = []
 
         in_triggers = False
 
@@ -267,7 +267,7 @@ class BaseAgent(ABC):
             raise ValueError(f"LLM client not initialized for agent {self._name}")
 
         try:
-            response = await self._llm_client.complete(
+            response: dict[str, Any] = await self._llm_client.complete(
                 messages=messages,
                 tools=tools,
             )
@@ -307,11 +307,12 @@ class BaseAgent(ABC):
 
         response = await self.call_llm(messages)
 
-        return {
+        result: dict[str, Any] = {
             "skill": skill_name,
             "response": response,
             "inputs": inputs,
         }
+        return result
 
     async def update_status(
         self,
