@@ -76,7 +76,18 @@ def run(workflow_file: str, inputs: Optional[str]) -> None:
 @click.option("--port", "-p", default=8000, help="Port number")
 def server(host: str, port: int) -> None:
     """Start API server."""
-    asyncio.run(start_server(host, port))
+    import asyncio
+    from bagualu.web.api_server import APIServer
+
+    console.print(f"[bold]Starting API server on {host}:{port}[/bold]")
+
+    # Initialize core synchronously
+    core = BaGuaLuCore()
+    asyncio.run(core.initialize())
+
+    # Start server
+    server = APIServer(core)
+    server.run_server(host, port)
 
 
 @cli.command()
@@ -186,7 +197,7 @@ async def start_server(host: str, port: int) -> None:
     await core.initialize()
 
     server = APIServer(core)
-    await server.start(host, port)
+    server.run_server(host, port)
 
 
 async def show_status() -> None:

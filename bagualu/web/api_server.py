@@ -114,12 +114,12 @@ class APIServer:
             evolved = await self._core.evolve_skill(skill_name)
             return {"evolved": evolved}
 
-    async def start(
+    def run_server(
         self,
         host: str = "0.0.0.0",
         port: int = 8000,
     ) -> None:
-        """Start API server.
+        """Run API server (synchronous).
 
         Args:
             host: Host address
@@ -129,4 +129,9 @@ class APIServer:
 
         logger.info(f"Starting API server on {host}:{port}")
 
-        await uvicorn.run(app, host=host, port=port)
+        uvicorn.run(
+            app,
+            host=host,
+            port=port,
+            log_level="info",
+        )
