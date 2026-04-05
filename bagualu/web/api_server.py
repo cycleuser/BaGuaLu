@@ -9,6 +9,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
 
+from bagualu.skills import (
+    get_skill_registry,
+    list_available_skills,
+    load_skill,
+)
 from bagualu.utils.logging import Logger
 from bagualu.web.web_ui import get_web_ui_html
 
@@ -206,7 +211,7 @@ async def terminate_agent(agent_id: str):
 
 
 @app.post("/skills")
-async def load_skill(config: SkillConfig):
+async def load_skill_endpoint(config: SkillConfig):
     """Load a skill."""
     global _core_instance
     if not _core_instance:
@@ -227,12 +232,28 @@ async def load_skill(config: SkillConfig):
 
 @app.get("/skills")
 async def list_skills():
-    """List all skills."""
+    """List all available skills from all sources."""
     global _core_instance
     if not _core_instance:
         raise HTTPException(status_code=500, detail="Core not initialized")
-    skills = await _core_instance.skills.get_all_skills()
-    return {"skills": skills}
+
+    skill_names = list_available_skills()
+
+    skills_list = []
+    for name in skill_names:
+        skill = load_skill(name)
+        if skill:
+            skills_list.append(
+                {
+                    "name": skill.name,
+                    "description": skill.description[:100] if skill.description else "",
+                    "version": skill.version,
+                    "source": skill.source,
+                    "path": str(skill.path) if skill.path else None,
+                }
+            )
+
+    return {"skills": skills_list, "total": len(skills_list)}
 
 
 @app.post("/skills/{skill_name}/evolve")
@@ -243,6 +264,136 @@ async def evolve_skill(skill_name: str):
         raise HTTPException(status_code=500, detail="Core not initialized")
     evolved = await _core_instance.evolve_skill(skill_name)
     return {"evolved": evolved}
+
+
+@app.post("/skills/install")
+async def install_skills(repo_url: str, skill_name: str | None = None):
+    """Install skills from GitHub repository."""
+    global _core_instance
+    if not _core_instance:
+        raise HTTPException(status_code=500, detail="Core not initialized")
+
+    results = await _core_instance.install_skill(repo_url, skill_name)
+
+    return {
+        "results": [
+            {
+                "skill_name": r.skill_name,
+                "success": r.success,
+                "message": r.message,
+            }
+            for r in results
+        ],
+        "total_installed": sum(1 for r in results if r.success),
+    }
+
+
+@app.get("/skills/sources")
+async def list_skill_sources():
+    """List skill source directories."""
+    registry = get_skill_registry()
+    sources = registry.get_sources()
+
+    return {
+        "sources": [
+            {
+                "path": str(path),
+                "name": name,
+            }
+            for path, name in sources
+        ]
+    }
+
+
+@app.get("/skills/{skill_name}")
+async def get_skill_details(skill_name: str):
+    """Get detailed information about a skill."""
+    skill = load_skill(skill_name)
+
+    if not skill:
+        raise HTTPException(status_code=404, detail=f"Skill not found: {skill_name}")
+
+    return {
+        "name": skill.name,
+        "description": skill.description,
+        "version": skill.version,
+        "source": skill.source,
+        "allowed_tools": skill.allowed_tools,
+        "path": str(skill.path) if skill.path else None,
+        "has_content": bool(skill.content),
+    }
+
+
+@app.get("/config")
+async def get_config():
+    """Get current configuration."""
+    global _core_instance
+    if not _core_instance:
+        raise HTTPException(status_code=500, detail="Core not initialized")
+
+    provider_config = await _core_instance.config.get_active_provider_config()
+    providers = await _core_instance.config.list_providers()
+    settings = _core_instance.config.settings
+
+    return {
+        "active_provider": _core_instance.config.providers.active_provider,
+        "providers": providers,
+        "settings": settings,
+        "current_provider": {
+            "name": provider_config.name if provider_config else None,
+            "model": provider_config.model if provider_config else None,
+            "base_url": provider_config.base_url if provider_config else None,
+        }
+        if provider_config
+        else None,
+    }
+
+
+@app.post("/config/provider")
+async def update_provider_config(
+    provider_name: str,
+    model: str | None = None,
+    api_key: str | None = None,
+    base_url: str | None = None,
+):
+    """Update provider configuration."""
+    global _core_instance
+    if not _core_instance:
+        raise HTTPException(status_code=500, detail="Core not initialized")
+
+    await _core_instance.config.configure_provider(
+        provider_name=provider_name,
+        api_key=api_key,
+        base_url=base_url,
+        model=model,
+    )
+
+    return {"success": True, "message": f"Provider {provider_name} updated"}
+
+
+@app.post("/config/active-provider")
+async def set_active_provider(provider_name: str):
+    """Set active provider."""
+    global _core_instance
+    if not _core_instance:
+        raise HTTPException(status_code=500, detail="Core not initialized")
+
+    await _core_instance.config.set_active_provider(provider_name)
+
+    return {"success": True, "active_provider": provider_name}
+
+
+@app.post("/config/settings")
+async def update_settings(settings: dict[str, Any]):
+    """Update system settings."""
+    global _core_instance
+    if not _core_instance:
+        raise HTTPException(status_code=500, detail="Core not initialized")
+
+    for key, value in settings.items():
+        await _core_instance.config.update_settings(key, value)
+
+    return {"success": True, "message": "Settings updated"}
 
 
 @app.get("/ui", response_class=HTMLResponse)

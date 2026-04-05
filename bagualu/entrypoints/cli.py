@@ -1,5 +1,3 @@
-"""CLI entry point for BaGuaLu (inspired by OpenLaoKe and OpenHarness)."""
-
 from __future__ import annotations
 
 import asyncio
@@ -13,6 +11,7 @@ from rich.prompt import Prompt
 
 from bagualu.config import ConfigManager, ConfigWizard
 from bagualu.core import BaGuaLuCore
+from bagualu.entrypoints.skill_commands import skill as skill_group
 from bagualu.utils.logging import Logger
 
 logger = Logger.get_logger(__name__)
@@ -38,6 +37,9 @@ def cli(ctx: click.Context, config: str | None, version: bool, init: bool) -> No
 
     if ctx.invoked_subcommand is None:
         asyncio.run(interactive_mode(config))
+
+
+cli.add_command(skill_group, name="skill")
 
 
 @cli.command()

@@ -300,12 +300,47 @@ BaGuaLu 兼容以下项目的技能和插件：
 
 ## 📊 Examples
 
-See [`examples/`](examples/) directory for:
+See [`examples/`](examples/) directory for comprehensive examples:
 
-- Agent deployment examples
-- Workflow orchestration examples
-- Skill evolution examples
-- Multi-agent coordination examples
+### Available Examples
+
+| Example | Description |
+|---------|-------------|
+| **[skill_management.py](examples/skill_management.py)** | List, install, and load skills from multiple sources |
+| **[multi_provider_config.py](examples/multi_provider_config.py)** | Configure multiple LLM providers with fallbacks |
+| **[web_ui_usage.py](examples/web_ui_usage.py)** | Use REST API and Web UI features |
+| **[cli_usage.sh](examples/cli_usage.sh)** | All CLI commands and workflows |
+| **[agent_supervisor.py](examples/agent_supervisor.py)** | Deploy and configure supervisor agents |
+| **[agent_scheduler.py](examples/agent_scheduler.py)** | Task scheduling and queue management |
+| **[tool_system.py](examples/tool_system.py)** | Create and use custom tools |
+| **[complete_example.py](examples/complete_example.py)** | Full comprehensive workflow demonstration |
+| **[simple_cluster.py](examples/simple_cluster.py)** | Basic cluster deployment |
+| **[workflow_orchestration.py](examples/workflow_orchestration.py)** | Workflow creation and execution |
+| **[skill_evolution.py](examples/skill_evolution.py)** | Skill evolution and lineage |
+
+### Quick Run Examples
+
+```bash
+# Run skill management example
+python examples/skill_management.py
+
+# Run complete example
+python examples/complete_example.py
+
+# Run workflow example
+python examples/workflow_orchestration.py
+
+# View CLI usage examples
+bash examples/cli_usage.sh
+```
+
+### Example Skills
+
+BaGuaLu includes example skills in [`bagualu/skills/examples/`](bagualu/skills/examples/):
+
+- **data-analysis** - Data processing and analysis
+- **code-review** - Code quality review
+- **test-generator** - Test generation and execution
 
 ---
 

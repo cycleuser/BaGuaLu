@@ -98,8 +98,45 @@ def get_web_ui_html() -> str:
             text-decoration: none;
             transition: opacity 0.3s;
         }
-        .btn:hover {
-            opacity: 0.8;
+.btn-small {
+            padding: 5px 10px;
+            font-size: 0.8em;
+            margin-left: 10px;
+        }
+        .skill-source {
+            color: #999;
+            font-size: 0.85em;
+        }
+        .skill-item {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .workflow-node {
+            background: #f0f0f0;
+            border: 2px solid #667eea;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 10px;
+            display: inline-block;
+            min-width: 150px;
+            cursor: move;
+        }
+        .workflow-node.selected {
+            border-color: #764ba2;
+            box-shadow: 0 0 10px rgba(118, 75, 162, 0.3);
+        }
+        #workflow-canvas {
+            min-height: 400px;
+            border: 2px dashed #ddd;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
         }
         .btn-secondary {
             background: #6c757d;
@@ -191,6 +228,29 @@ def get_web_ui_html() -> str:
             padding: 20px;
             color: #666;
         }
+
+.form-group {
+    margin: 15px 0;
+}
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+    color: #333;
+}
+.form-group input, .form-group select {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 1em;
+}
+.form-group input[type="checkbox"] {
+    width: auto;
+}
+.settings-form {
+    padding: 20px;
+}
     </style>
 </head>
 <body>
@@ -205,6 +265,7 @@ def get_web_ui_html() -> str:
             <button class="tab" onclick="showTab('agents')">Agents</button>
             <button class="tab" onclick="showTab('workflows')">Workflows</button>
             <button class="tab" onclick="showTab('skills')">Skills</button>
+            <button class="tab" onclick="showTab('settings')">⚙️ Settings</button>
         </div>
 
         <div id="dashboard-tab" class="tab-content">
@@ -229,12 +290,20 @@ def get_web_ui_html() -> str:
                     </div>
                 </div>
 
-                <div class="card">
-                    <h2>📚 Skills</h2>
-                    <div class="stat">
-                        <span class="stat-label">Total Skills</span>
-                        <span class="stat-value" id="total-skills">-</span>
-                    </div>
+<div class="card">
+                <h2>⚡ Skills</h2>
+                <div class="stat">
+                    <span class="stat-label">Total Skills</span>
+                    <span class="stat-value" id="skills-count">0</span>
+                </div>
+                <div id="skills-list" style="max-height: 300px; overflow-y: auto;"></div>
+                <div style="margin-top: 15px;">
+                    <button class="btn" onclick="loadSkill()">Load Skill</button>
+                    <button class="btn" onclick="installSkills()">Install from GitHub</button>
+                    <button class="btn" onclick="showSkillManager()">Manage Skills</button>
+                    <button class="btn btn-secondary" onclick="showProviderSettings()">⚙️ Settings</button>
+                </div>
+            </div>
                     <div class="stat">
                         <span class="stat-label">Evolution Count</span>
                         <span class="stat-value" id="evolution-count">-</span>
@@ -314,11 +383,63 @@ def get_web_ui_html() -> str:
                 <h2>📚 Skill Library</h2>
                 <div class="actions">
                     <button class="btn" onclick="loadSkill()">Load Skill</button>
-                    <button class="btn" onclick="evolveSkill()">Evolve Skill</button>
+                    <button class="btn" onclick="showSkillManager()">Manage Skills</button>
+                    <button class="btn btn-secondary" onclick="showProviderSettings()">⚙️ Settings</button>
                     <button class="btn btn-secondary" onclick="refreshSkills()">Refresh</button>
                 </div>
                 <div id="skill-list">
                     <div class="loading">Loading skills...</div>
+                </div>
+            </div>
+        </div>
+
+
+        <div id="settings-tab" class="tab-content" style="display:none;">
+            <div class="card">
+                <h2>⚙️ Configuration Settings</h2>
+                <div class="settings-form">
+                    <h3>Provider Settings</h3>
+                    <div class="form-group">
+                        <label>Active Provider:</label>
+                        <select id="provider-select" onchange="changeProvider()">
+                            <option value="ollama">Ollama</option>
+                            <option value="lmstudio">LM Studio</option>
+                            <option value="openai">OpenAI</option>
+                            <option value="anthropic">Anthropic</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Model:</label>
+                        <input type="text" id="model-input" placeholder="Model name">
+                    </div>
+                    <div class="form-group">
+                        <label>API Key (if required):</label>
+                        <input type="password" id="api-key-input" placeholder="API key">
+                    </div>
+                    <button class="btn" onclick="saveProviderSettings()">Save Provider</button>
+
+                    <h3 style="margin-top: 30px;">System Settings</h3>
+                    <div class="form-group">
+                        <label>Max Concurrent Agents:</label>
+                        <input type="number" id="max-agents-input" value="10">
+                    </div>
+                    <div class="form-group">
+                        <label>Default Agent Role:</label>
+                        <select id="default-role-select">
+                            <option value="executor">Executor</option>
+                            <option value="supervisor">Supervisor</option>
+                            <option value="scheduler">Scheduler</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Evolution Enabled:</label>
+                        <input type="checkbox" id="evolution-enabled" checked>
+                    </div>
+                    <div class="form-group">
+                        <label>Quality Threshold:</label>
+                        <input type="number" id="quality-threshold" value="0.8" step="0.1" min="0" max="1">
+                    </div>
+                    <button class="btn" onclick="saveSystemSettings()">Save Settings</button>
                 </div>
             </div>
         </div>
@@ -364,11 +485,26 @@ def get_web_ui_html() -> str:
             }
         }
 
-        async function refreshSkills() {
-            const data = await fetchAPI('/skills');
-            if (data) {
-                document.getElementById('total-skills').textContent = data.skills?.length || 0;
+async function refreshSkills() {
+            try {
+                const response = await fetch(API_BASE + '/skills');
+                const data = await response.json();
+                const skillsList = document.getElementById('skills-list');
+
+                skillsList.innerHTML = data.skills.map(skill =>
+                    '<div class="skill-item">' +
+                    '<strong>' + skill.name + '</strong> ' +
+                    '<span class="skill-source">(' + skill.source + ')</span><br>' +
+                    '<small>' + skill.description + '</small>' +
+                    '<button onclick="showSkillInfo(\\'' + skill.name + '\\')" class="btn-small">Info</button>' +
+                    '</div>'
+                ).join('');
+
+                document.getElementById('skills-count').textContent = data.total;
+            } catch (error) {
+                console.error('Failed to refresh skills:', error);
             }
+        }
         }
 
         async function refreshWorkflows() {
@@ -405,20 +541,69 @@ def get_web_ui_html() -> str:
 
         function loadSkill() {
             const name = prompt('Skill name:');
-            const path = prompt('Skill file path (optional):');
-            if (name) {
-                const body = path ? {name, skill_path: path} : {name};
+            if (!name) return;
+
+            const path = prompt('Skill file path (optional, leave empty to install from GitHub):');
+
+            if (path) {
+                // Load from local file
                 fetch(API_BASE + '/skills', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify(body)
-                }).then(() => {
-                    alert('Skill loaded successfully!');
-                    refreshSkills();
-                }).catch(err => {
-                    alert('Failed to load skill: ' + err.message);
-                });
+                    body: JSON.stringify({name: name, skill_path: path})
+                }).then(r => r.json())
+                  .then(data => {
+                    if (data.skill || data.skill_id) {
+                        alert('✓ Skill loaded successfully!');
+                        refreshSkills();
+                    } else {
+                        alert('Failed to load skill: ' + (data.detail || JSON.stringify(data)));
+                    }
+                }).catch(err => alert('Error: ' + err.message));
+            } else {
+                // Install from GitHub
+                const repoUrl = prompt('GitHub repository URL:');
+                if (!repoUrl) return;
+
+                fetch(API_BASE + '/skills/install?repo_url=' + encodeURIComponent(repoUrl) + '&skill_name=' + encodeURIComponent(name), {
+                    method: 'POST'
+                }).then(r => r.json())
+                  .then(data => {
+                    if (data.total_installed > 0) {
+                        alert('✓ Installed ' + data.total_installed + ' skill(s)!');
+                        refreshSkills();
+                    } else {
+                        alert('No skills installed. Check repository URL.');
+                    }
+                }).catch(err => alert('Error: ' + err.message));
             }
+        }
+
+        function installSkills() {
+            const repoUrl = prompt('GitHub repository URL:\n(e.g., https://github.com/cycleuser/Skills)');
+            if (!repoUrl) return;
+
+            fetch(API_BASE + '/skills/install?repo_url=' + encodeURIComponent(repoUrl), {
+                method: 'POST'
+            }).then(r => r.json())
+              .then(data => {
+                const msg = 'Installed ' + data.total_installed + ' skill(s)\\n\\n' +
+                           data.results.map(r => (r.success ? '✓' : '✗') + ' ' + r.skill_name + ': ' + r.message).join('\\n');
+                alert(msg);
+                if (data.total_installed > 0) refreshSkills();
+            }).catch(err => alert('Error: ' + err.message));
+        }
+
+        function showSkillInfo(skillName) {
+            fetch(API_BASE + '/skills/' + skillName)
+                .then(r => r.json())
+                .then(skill => {
+                    const info = 'Name: ' + skill.name + '\\n' +
+                                'Version: ' + skill.version + '\\n' +
+                                'Source: ' + skill.source + '\\n\\n' +
+                                'Description:\\n' + skill.description;
+                    alert(info);
+                }).catch(err => alert('Error loading skill: ' + err.message));
         }
 
         function evolveSkill() {

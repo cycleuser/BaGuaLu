@@ -7,7 +7,13 @@ from typing import Any
 
 from bagualu.agents import AgentCluster
 from bagualu.config import ConfigManager
-from bagualu.skills import SkillEngine
+from bagualu.skills import (
+    SkillEngine,
+    SkillInstaller,
+    list_available_skills,
+    load_skill,
+    rescan_skills,
+)
 from bagualu.utils.logging import Logger
 from bagualu.workflow import WorkflowEngine
 
@@ -42,6 +48,7 @@ class BaGuaLuCore:
         self._skill_engine = SkillEngine(skill_dirs or [], self._config_manager)
         self._cluster = AgentCluster(self._config_manager, self._skill_engine)
         self._workflow_engine = WorkflowEngine(self._cluster, self._skill_engine)
+        self._skill_installer = SkillInstaller()
         self._workspace = workspace or Path.cwd() / ".bagualu"
         self._initialized = False
 
@@ -184,6 +191,48 @@ class BaGuaLuCore:
         logger.info(f"Skill {skill_name} evolution: {success}")
         return success
 
+    async def install_skill(
+        self,
+        repo_url: str,
+        skill_name: str | None = None,
+    ) -> list[Any]:
+        """Install skills from GitHub repository.
+
+        Args:
+            repo_url: GitHub repository URL
+            skill_name: Specific skill to install (optional)
+
+        Returns:
+            List of installation results
+        """
+        await self.initialize()
+
+        results = await self._skill_installer.install_from_github(repo_url, skill_name)
+
+        total = rescan_skills()
+        logger.info(f"Installed skills, total available: {total}")
+
+        return results
+
+    def list_skills(self) -> list[str]:
+        """List all available skills.
+
+        Returns:
+            List of skill names
+        """
+        return list_available_skills()
+
+    def get_skill_info(self, skill_name: str) -> Any:
+        """Get skill information.
+
+        Args:
+            skill_name: Skill name
+
+        Returns:
+            Skill object or None
+        """
+        return load_skill(skill_name)
+
     @property
     def config(self) -> ConfigManager:
         """Get configuration manager."""
@@ -203,3 +252,8 @@ class BaGuaLuCore:
     def workflow(self) -> WorkflowEngine:
         """Get workflow engine."""
         return self._workflow_engine
+
+    @property
+    def skill_installer(self) -> SkillInstaller:
+        """Get skill installer."""
+        return self._skill_installer
