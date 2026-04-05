@@ -146,7 +146,7 @@ class MultiProviderConfig:
         """
         return self._providers
 
-    def list_ready_providers(self) -> List[str]:
+    def list_ready_providers(self) -> list[str]:
         """List ready providers.
 
         Returns:

@@ -55,9 +55,7 @@ def config(config: str | None, provider: str | None, model: str | None) -> None:
 @click.option("--provider", "-p", help="Provider name")
 @click.option("--model", "-m", help="Model identifier")
 @click.option("--skills", "-s", multiple=True, help="Skills to load")
-def deploy(
-    name: str, role: str, provider: str | None, model: str | None, skills: tuple
-) -> None:
+def deploy(name: str, role: str, provider: str | None, model: str | None, skills: tuple) -> None:
     """Deploy an agent."""
     asyncio.run(deploy_agent(name, role, provider, model, list(skills)))
 
@@ -111,9 +109,7 @@ async def initialize_config(config_path: str | None) -> None:
     await wizard.run()
 
 
-async def configure(
-    config_path: str | None, provider: str | None, model: str | None
-) -> None:
+async def configure(config_path: str | None, provider: str | None, model: str | None) -> None:
     """Configure BaGuaLu."""
     config_manager = ConfigManager(Path(config_path) if config_path else None)
 

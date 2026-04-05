@@ -1,6 +1,5 @@
 """Tests for BaGuaLu core functionality."""
 
-
 import pytest
 
 from bagualu.config import ConfigManager

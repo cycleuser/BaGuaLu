@@ -312,9 +312,10 @@ class ConfigManager:
         keys = []
 
         for provider_name, provider in self._providers.providers.items():
-            if "coding" in provider_name.lower() or "plan" in provider_name.lower():
-                if provider.api_key:
-                    keys.append(provider.api_key)
+            if (
+                "coding" in provider_name.lower() or "plan" in provider_name.lower()
+            ) and provider.api_key:
+                keys.append(provider.api_key)
 
         return keys
 

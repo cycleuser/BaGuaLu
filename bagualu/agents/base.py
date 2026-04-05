@@ -190,12 +190,7 @@ class BaseAgent(ABC):
             logger.error(f"Failed to load skill from {skill_path}: {e}")
             return False
 
-    def _load_skill(self, skill_name: str) -> None:
-        """Load a skill by name (synchronous initialization).
-
-        Args:
-            skill_name: Skill name to load
-        """
+    def _load_skill(self, skill_name: str) -> None:  # noqa: B027
         pass
 
     async def _parse_skill_file(
@@ -251,8 +246,7 @@ class BaseAgent(ABC):
             source=skill_path,
         )
 
-    async def _setup_llm_client(self) -> None:
-        """Set up LLM client based on provider configuration."""
+    async def _setup_llm_client(self) -> None:  # noqa: B027
         pass
 
     async def call_llm(

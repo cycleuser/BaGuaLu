@@ -64,32 +64,26 @@ class WorkflowDAG:
         logger.info(f"Workflow DAG created: {name} ({len(nodes)} nodes)")
 
     def compute_execution_order(self) -> list[list[WorkflowNode]]:
-        """Compute execution order (parallelizable levels).
-
-        Returns:
-            List of execution levels
-        """
         levels = []
-        remaining_nodes = set(self.nodes)
-        completed_nodes = set()
+        remaining_ids = set(n.id for n in self.nodes)
+        completed_ids = set()
 
-        while remaining_nodes:
-            ready_nodes = [
-                node
-                for node in remaining_nodes
-                if self._dependency_map.get(node.id, set()).issubset(
-                    {n.id for n in completed_nodes}
-                )
+        while remaining_ids:
+            ready_ids = [
+                nid
+                for nid in remaining_ids
+                if self._dependency_map.get(nid, set()).issubset(completed_ids)
             ]
 
-            if not ready_nodes:
+            if not ready_ids:
                 logger.warning("Circular dependency detected")
                 break
 
+            ready_nodes = [self._node_map[nid] for nid in ready_ids if nid in self._node_map]
             levels.append(ready_nodes)
 
-            completed_nodes.update(ready_nodes)
-            remaining_nodes -= set(ready_nodes)
+            completed_ids.update(ready_ids)
+            remaining_ids -= set(ready_ids)
 
         return levels
 

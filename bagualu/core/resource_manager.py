@@ -167,7 +167,7 @@ class ResourceManager:
             return agent_id
         except TimeoutError:
             self._pending_requests.pop(request.request_id, None)
-            raise ValueError(f"No agent available for task {task.id} within timeout")
+            raise ValueError(f"No agent available for task {task.id} within timeout") from None
 
     async def release_agent(
         self,
@@ -226,11 +226,10 @@ class ResourceManager:
         if request.required_role and agent.role != request.required_role:
             return False
 
-        if request.required_skills:
-            if not all(skill in agent.skills for skill in request.required_skills):
-                return False
-
-        return True
+        return not (
+            request.required_skills
+            and not all(skill in agent.skills for skill in request.required_skills)
+        )
 
     async def _allocation_loop(self) -> None:
         """Background loop for processing allocation requests."""
