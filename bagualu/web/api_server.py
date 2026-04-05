@@ -15,9 +15,7 @@ logger = Logger.get_logger(__name__)
 
 
 app = FastAPI(
-    title="BaGuaLu API",
-    version="0.1.0",
-    description="Intelligent Agent Orchestration Platform"
+    title="BaGuaLu API", version="0.1.0", description="Intelligent Agent Orchestration Platform"
 )
 
 app.add_middleware(
@@ -48,6 +46,170 @@ class AgentConfig(BaseModel):
     skills: Optional[List[str]] = None
 
 
+_core_instance: Any = None
+
+
+def set_core_instance(core: Any) -> None:
+    """Set the core instance for route handlers."""
+    global _core_instance
+    _core_instance = core
+
+
+@app.get("/", response_class=HTMLResponse)
+async def root():
+    """Root endpoint - Web UI."""
+    return get_web_ui_html()
+
+
+@app.get("/api")
+async def api_info():
+    """API info endpoint."""
+    return {
+        "message": "BaGuaLu API",
+        "version": "0.1.0",
+        "docs": "/docs",
+        "openapi": "/openapi.json",
+    }
+
+
+@app.get("/models", response_model=Dict[str, Any])
+async def list_models():
+    """List available models."""
+    global _core_instance
+    models = []
+
+    if _core_instance:
+        provider_config = await _core_instance.config.get_active_provider_config()
+        if provider_config:
+            models.append(
+                {
+                    "id": provider_config.model or "default",
+                    "object": "model",
+                    "owned_by": provider_config.name,
+                }
+            )
+
+    return {"object": "list", "data": models}
+
+
+@app.get("/v1/models", response_model=Dict[str, Any])
+async def list_models_v1():
+    """List available models (OpenAI compatible)."""
+    global _core_instance
+    models = []
+
+    if _core_instance:
+        provider_config = await _core_instance.config.get_active_provider_config()
+        if provider_config and provider_config.model:
+            models.append(
+                {
+                    "id": provider_config.model,
+                    "object": "model",
+                    "created": 1700000000,
+                    "owned_by": provider_config.name,
+                }
+            )
+
+        for provider_name, provider in _core_instance.config.providers.providers.items():
+            if (
+                provider.model
+                and provider.enabled
+                and provider.model not in [m["id"] for m in models]
+            ):
+                models.append(
+                    {
+                        "id": provider.model,
+                        "object": "model",
+                        "created": 1700000000,
+                        "owned_by": provider_name,
+                    }
+                )
+
+    return {"object": "list", "data": models}
+
+
+@app.post("/workflows")
+async def create_workflow(config: WorkflowConfig):
+    """Create a new workflow."""
+    global _core_instance
+    if not _core_instance:
+        raise HTTPException(status_code=500, detail="Core not initialized")
+    workflow_id = await _core_instance.create_workflow(config.dict())
+    return {"workflow_id": workflow_id}
+
+
+@app.post("/workflows/{workflow_id}/execute")
+async def execute_workflow(workflow_id: str, inputs: Dict[str, Any]):
+    """Execute a workflow."""
+    global _core_instance
+    if not _core_instance:
+        raise HTTPException(status_code=500, detail="Core not initialized")
+    result = await _core_instance.execute_workflow(workflow_id, inputs)
+    return result
+
+
+@app.get("/workflows")
+async def list_workflows():
+    """List all workflows."""
+    global _core_instance
+    if not _core_instance:
+        raise HTTPException(status_code=500, detail="Core not initialized")
+    workflows = await _core_instance.workflow.list_workflows()
+    return {"workflows": workflows}
+
+
+@app.post("/agents")
+async def deploy_agent(config: AgentConfig):
+    """Deploy a new agent."""
+    global _core_instance
+    if not _core_instance:
+        raise HTTPException(status_code=500, detail="Core not initialized")
+    agent_id = await _core_instance.deploy_agent(
+        name=config.name,
+        role=config.role,
+        provider=config.provider,
+        model=config.model,
+        skills=config.skills,
+    )
+    return {"agent_id": agent_id}
+
+
+@app.get("/agents")
+async def list_agents():
+    """List all agents."""
+    global _core_instance
+    if not _core_instance:
+        raise HTTPException(status_code=500, detail="Core not initialized")
+    status = await _core_instance.cluster.get_cluster_status()
+    return status
+
+
+@app.get("/skills")
+async def list_skills():
+    """List all skills."""
+    global _core_instance
+    if not _core_instance:
+        raise HTTPException(status_code=500, detail="Core not initialized")
+    skills = await _core_instance.skills.get_all_skills()
+    return {"skills": skills}
+
+
+@app.post("/skills/{skill_name}/evolve")
+async def evolve_skill(skill_name: str):
+    """Evolve a skill."""
+    global _core_instance
+    if not _core_instance:
+        raise HTTPException(status_code=500, detail="Core not initialized")
+    evolved = await _core_instance.evolve_skill(skill_name)
+    return {"evolved": evolved}
+
+
+@app.get("/ui", response_class=HTMLResponse)
+async def web_ui():
+    """Get web UI."""
+    return get_web_ui_html()
+
+
 class APIServer:
     """REST API server for BaGuaLu.
 
@@ -68,113 +230,9 @@ class APIServer:
             core: BaGuaLu core instance
         """
         self._core = core
-        self._setup_routes()
+        set_core_instance(core)
 
         logger.info("API server initialized")
-
-    def _setup_routes(self) -> None:
-        """Setup API routes."""
-
-@app.get("/")
-async def root():
-    return {
-        "message": "BaGuaLu API",
-        "version": "0.1.0",
-        "docs": "/docs",
-        "openapi": "/openapi.json"
-    }
-
-
-@app.get("/models", response_model=Dict[str, Any])
-        async def list_models():
-            """List available models."""
-            provider_config = await self._core.config.get_active_provider_config()
-            
-            models = []
-            if provider_config:
-                models.append({
-                    "id": provider_config.model or "default",
-                    "object": "model",
-                    "owned_by": provider_config.name
-                })
-            
-            return {"object": "list", "data": models}
-        
-        @app.get("/v1/models", response_model=Dict[str, Any])
-        async def list_models_v1():
-            """List available models (OpenAI compatible)."""
-            provider_config = await self._core.config.get_active_provider_config()
-            
-            models = []
-            if provider_config and provider_config.model:
-                models.append({
-                    "id": provider_config.model,
-                    "object": "model",
-                    "created": 1700000000,
-                    "owned_by": provider_config.name
-                })
-            
-            for provider_name, provider in self._core.config.providers.providers.items():
-                if provider.model and provider.enabled and provider.model not in [m["id"] for m in models]:
-                    models.append({
-                        "id": provider.model,
-                        "object": "model",
-                        "created": 1700000000,
-                        "owned_by": provider_name
-                    })
-            
-            return {"object": "list", "data": models}
-
-        @app.post("/workflows")
-        async def create_workflow(config: WorkflowConfig):
-            workflow_id = await self._core.create_workflow(config.dict())
-            return {"workflow_id": workflow_id}
-
-        @app.post("/workflows/{workflow_id}/execute")
-        async def execute_workflow(workflow_id: str, inputs: Dict[str, Any]):
-            result = await self._core.execute_workflow(workflow_id, inputs)
-            return result
-
-        @app.get("/workflows")
-        async def list_workflows():
-            workflows = await self._core.workflow.list_workflows()
-            return {"workflows": workflows}
-
-        @app.post("/agents")
-        async def deploy_agent(config: AgentConfig):
-            agent_id = await self._core.deploy_agent(
-                name=config.name,
-                role=config.role,
-                provider=config.provider,
-                model=config.model,
-                skills=config.skills,
-            )
-            return {"agent_id": agent_id}
-
-        @app.get("/agents")
-        async def list_agents():
-            status = await self._core.cluster.get_cluster_status()
-            return status
-
-        @app.get("/skills")
-        async def list_skills():
-            skills = await self._core.skills.get_all_skills()
-            return {"skills": skills}
-
-        @app.post("/skills/{skill_name}/evolve")
-        async def evolve_skill(skill_name: str):
-            evolved = await self._core.evolve_skill(skill_name)
-            return {"evolved": evolved}
-        
-        @app.get("/ui", response_class=HTMLResponse)
-        async def web_ui():
-            """Get web UI."""
-            return get_web_ui_html()
-        
-        @app.get("/", response_class=HTMLResponse)
-        async def root():
-            """Root endpoint - Web UI."""
-            return get_web_ui_html()
 
     def run_server(
         self,
