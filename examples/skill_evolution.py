@@ -3,7 +3,6 @@
 import asyncio
 
 from bagualu import BaGuaLuCore
-from bagualu.skills.evolver import EvolutionTrigger
 
 
 async def main() -> None:

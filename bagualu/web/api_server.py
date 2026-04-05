@@ -2,14 +2,15 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
-from typing import Any, Dict, List, Optional
 
-from bagualu.web.web_ui import get_web_ui_html
 from bagualu.utils.logging import Logger
+from bagualu.web.web_ui import get_web_ui_html
 
 logger = Logger.get_logger(__name__)
 
@@ -31,9 +32,9 @@ class WorkflowConfig(BaseModel):
     """Workflow configuration model."""
 
     name: str
-    nodes: List[Dict[str, Any]]
-    edges: List[Dict[str, Any]]
-    inputs: Optional[Dict[str, Any]] = None
+    nodes: list[dict[str, Any]]
+    edges: list[dict[str, Any]]
+    inputs: dict[str, Any] | None = None
 
 
 class AgentConfig(BaseModel):
@@ -41,9 +42,9 @@ class AgentConfig(BaseModel):
 
     name: str
     role: str
-    provider: Optional[str] = None
-    model: Optional[str] = None
-    skills: Optional[List[str]] = None
+    provider: str | None = None
+    model: str | None = None
+    skills: list[str] | None = None
 
 
 _core_instance: Any = None
@@ -72,7 +73,7 @@ async def api_info():
     }
 
 
-@app.get("/models", response_model=Dict[str, Any])
+@app.get("/models", response_model=dict[str, Any])
 async def list_models():
     """List available models."""
     global _core_instance
@@ -92,7 +93,7 @@ async def list_models():
     return {"object": "list", "data": models}
 
 
-@app.get("/v1/models", response_model=Dict[str, Any])
+@app.get("/v1/models", response_model=dict[str, Any])
 async def list_models_v1():
     """List available models (OpenAI compatible)."""
     global _core_instance
@@ -139,7 +140,7 @@ async def create_workflow(config: WorkflowConfig):
 
 
 @app.post("/workflows/{workflow_id}/execute")
-async def execute_workflow(workflow_id: str, inputs: Dict[str, Any]):
+async def execute_workflow(workflow_id: str, inputs: dict[str, Any]):
     """Execute a workflow."""
     global _core_instance
     if not _core_instance:

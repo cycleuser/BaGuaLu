@@ -2,12 +2,11 @@
 
 from __future__ import annotations
 
-import asyncio
 import json
 import sqlite3
-from pathlib import Path
-from typing import Any, Dict, List, Optional
 from datetime import datetime
+from pathlib import Path
+from typing import Any
 
 from bagualu.utils.logging import Logger
 
@@ -26,7 +25,7 @@ class SkillStore:
 
     def __init__(
         self,
-        db_path: Optional[Path] = None,
+        db_path: Path | None = None,
     ) -> None:
         """Initialize skill store.
 
@@ -34,7 +33,7 @@ class SkillStore:
             db_path: Path to SQLite database
         """
         self._db_path = db_path or Path.home() / ".bagualu" / "skills.db"
-        self._db: Optional[sqlite3.Connection] = None
+        self._db: sqlite3.Connection | None = None
         self._initialized = False
 
         logger.info(f"Skill store initialized (db: {self._db_path})")
@@ -110,7 +109,7 @@ class SkillStore:
 
     async def register_skill(
         self,
-        skill_def: Dict[str, Any],
+        skill_def: dict[str, Any],
     ) -> str:
         """Register a skill.
 
@@ -186,8 +185,8 @@ class SkillStore:
     async def get_skill(
         self,
         skill_name: str,
-        version: Optional[str] = None,
-    ) -> Optional[Dict[str, Any]]:
+        version: str | None = None,
+    ) -> dict[str, Any] | None:
         """Get skill by name and version.
 
         Args:
@@ -231,7 +230,7 @@ class SkillStore:
     async def update_skill_version(
         self,
         skill_name: str,
-        new_skill_def: Dict[str, Any],
+        new_skill_def: dict[str, Any],
     ) -> str:
         """Update skill with new version.
 
@@ -277,7 +276,7 @@ class SkillStore:
     async def get_lineage(
         self,
         skill_name: str,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Get skill lineage.
 
         Args:
@@ -362,8 +361,8 @@ class SkillStore:
     async def get_metrics(
         self,
         skill_name: str,
-        version: Optional[str] = None,
-    ) -> Optional[Dict[str, Any]]:
+        version: str | None = None,
+    ) -> dict[str, Any] | None:
         """Get skill metrics.
 
         Args:
@@ -416,7 +415,7 @@ class SkillStore:
         self,
         skill_name: str,
         keep_versions: int = 5,
-    ) -> List[str]:
+    ) -> list[str]:
         """Clean up old skill versions.
 
         Args:
@@ -471,7 +470,7 @@ class SkillStore:
 
         return removed_ids
 
-    async def get_all_skills_with_metrics(self) -> List[Dict[str, Any]]:
+    async def get_all_skills_with_metrics(self) -> list[dict[str, Any]]:
         """Get all skills with their metrics.
 
         Returns:

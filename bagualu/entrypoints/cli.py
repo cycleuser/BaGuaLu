@@ -5,15 +5,14 @@ from __future__ import annotations
 import asyncio
 import sys
 from pathlib import Path
-from typing import Optional
 
 import click
 from rich.console import Console
 from rich.panel import Panel
-from rich.prompt import Prompt, Confirm
+from rich.prompt import Prompt
 
-from bagualu.core import BaGuaLuCore
 from bagualu.config import ConfigManager, ConfigWizard
+from bagualu.core import BaGuaLuCore
 from bagualu.utils.logging import Logger
 
 logger = Logger.get_logger(__name__)
@@ -25,7 +24,7 @@ console = Console()
 @click.option("--version", "-v", is_flag=True, help="Show version")
 @click.option("--init", is_flag=True, help="Initialize configuration")
 @click.pass_context
-def cli(ctx: click.Context, config: Optional[str], version: bool, init: bool) -> None:
+def cli(ctx: click.Context, config: str | None, version: bool, init: bool) -> None:
     """BaGuaLu (八卦炉) - Intelligent Agent Orchestration Platform."""
     if version:
         from bagualu import __version__
@@ -45,7 +44,7 @@ def cli(ctx: click.Context, config: Optional[str], version: bool, init: bool) ->
 @click.option("--config", "-c", type=click.Path(), help="Configuration file")
 @click.option("--provider", "-p", help="Provider name")
 @click.option("--model", "-m", help="Model identifier")
-def config(config: Optional[str], provider: Optional[str], model: Optional[str]) -> None:
+def config(config: str | None, provider: str | None, model: str | None) -> None:
     """Configure BaGuaLu."""
     asyncio.run(configure(config, provider, model))
 
@@ -57,7 +56,7 @@ def config(config: Optional[str], provider: Optional[str], model: Optional[str])
 @click.option("--model", "-m", help="Model identifier")
 @click.option("--skills", "-s", multiple=True, help="Skills to load")
 def deploy(
-    name: str, role: str, provider: Optional[str], model: Optional[str], skills: tuple
+    name: str, role: str, provider: str | None, model: str | None, skills: tuple
 ) -> None:
     """Deploy an agent."""
     asyncio.run(deploy_agent(name, role, provider, model, list(skills)))
@@ -66,7 +65,7 @@ def deploy(
 @cli.command()
 @click.argument("workflow_file", type=click.Path(exists=True))
 @click.option("--inputs", "-i", help="JSON inputs")
-def run(workflow_file: str, inputs: Optional[str]) -> None:
+def run(workflow_file: str, inputs: str | None) -> None:
     """Execute a workflow."""
     asyncio.run(execute_workflow(workflow_file, inputs))
 
@@ -77,6 +76,7 @@ def run(workflow_file: str, inputs: Optional[str]) -> None:
 def server(host: str, port: int) -> None:
     """Start API server."""
     import asyncio
+
     from bagualu.web.api_server import APIServer
 
     console.print(f"[bold]Starting API server on {host}:{port}[/bold]")
@@ -96,7 +96,7 @@ def status() -> None:
     asyncio.run(show_status())
 
 
-async def initialize_config(config_path: Optional[str]) -> None:
+async def initialize_config(config_path: str | None) -> None:
     """Initialize configuration."""
     console.print(
         Panel.fit(
@@ -112,7 +112,7 @@ async def initialize_config(config_path: Optional[str]) -> None:
 
 
 async def configure(
-    config_path: Optional[str], provider: Optional[str], model: Optional[str]
+    config_path: str | None, provider: str | None, model: str | None
 ) -> None:
     """Configure BaGuaLu."""
     config_manager = ConfigManager(Path(config_path) if config_path else None)
@@ -134,8 +134,8 @@ async def configure(
 async def deploy_agent(
     name: str,
     role: str,
-    provider: Optional[str],
-    model: Optional[str],
+    provider: str | None,
+    model: str | None,
     skills: list,
 ) -> None:
     """Deploy an agent."""
@@ -154,7 +154,7 @@ async def deploy_agent(
     console.print(f"[green]✓[/green] Agent deployed: {agent_id}")
 
 
-async def execute_workflow(workflow_file: str, inputs: Optional[str]) -> None:
+async def execute_workflow(workflow_file: str, inputs: str | None) -> None:
     """Execute a workflow."""
     import json
 
@@ -183,7 +183,7 @@ async def execute_workflow(workflow_file: str, inputs: Optional[str]) -> None:
 
     result = await core.execute_workflow(workflow_id, inputs_data)
 
-    console.print(f"[green]✓[/green] Workflow executed")
+    console.print("[green]✓[/green] Workflow executed")
     console.print_json(json.dumps(result, indent=2))
 
 
@@ -216,7 +216,7 @@ async def show_status() -> None:
         console.print(f"  - {agent['name']} ({agent['role']}): {agent['status']}")
 
 
-async def interactive_mode(config_path: Optional[str]) -> None:
+async def interactive_mode(config_path: str | None) -> None:
     """Run in interactive mode."""
     console.print(
         Panel.fit(

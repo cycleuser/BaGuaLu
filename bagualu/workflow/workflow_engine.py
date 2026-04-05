@@ -4,12 +4,11 @@ from __future__ import annotations
 
 import asyncio
 from dataclasses import dataclass, field
-from pathlib import Path
-from typing import Any, Dict, List, Optional, Set
 from datetime import datetime
+from typing import Any
 
-from bagualu.workflow.workflow_dag import WorkflowDAG
 from bagualu.utils.logging import Logger
+from bagualu.workflow.workflow_dag import WorkflowDAG
 
 logger = Logger.get_logger(__name__)
 
@@ -21,8 +20,8 @@ class WorkflowNode:
     id: str
     agent_role: str
     instruction: str
-    inputs: Dict[str, Any] = field(default_factory=dict)
-    dependencies: List[str] = field(default_factory=list)
+    inputs: dict[str, Any] = field(default_factory=dict)
+    dependencies: list[str] = field(default_factory=list)
     priority: int = 5
 
 
@@ -32,7 +31,7 @@ class WorkflowEdge:
 
     from_node: str
     to_node: str
-    condition: Optional[str] = None
+    condition: str | None = None
 
 
 class WorkflowEngine:
@@ -59,8 +58,8 @@ class WorkflowEngine:
         """
         self._cluster = cluster
         self._skill_engine = skill_engine
-        self._workflows: Dict[str, WorkflowDAG] = {}
-        self._execution_history: List[Dict[str, Any]] = []
+        self._workflows: dict[str, WorkflowDAG] = {}
+        self._execution_history: list[dict[str, Any]] = []
 
         logger.info("Workflow engine initialized")
 
@@ -70,7 +69,7 @@ class WorkflowEngine:
 
     async def create(
         self,
-        workflow_config: Dict[str, Any],
+        workflow_config: dict[str, Any],
     ) -> str:
         """Create a workflow from configuration.
 
@@ -119,8 +118,8 @@ class WorkflowEngine:
     async def execute(
         self,
         workflow_id: str,
-        inputs: Dict[str, Any],
-    ) -> Dict[str, Any]:
+        inputs: dict[str, Any],
+    ) -> dict[str, Any]:
         """Execute a workflow.
 
         Args:
@@ -174,8 +173,8 @@ class WorkflowEngine:
     async def _execute_workflow(
         self,
         workflow: WorkflowDAG,
-        inputs: Dict[str, Any],
-    ) -> Dict[str, Any]:
+        inputs: dict[str, Any],
+    ) -> dict[str, Any]:
         """Execute workflow DAG.
 
         Args:
@@ -195,7 +194,7 @@ class WorkflowEngine:
                 return_exceptions=True,
             )
 
-            for node, result in zip(level_nodes, level_results):
+            for node, result in zip(level_nodes, level_results, strict=False):
                 if isinstance(result, Exception):
                     results[node.id] = {
                         "success": False,
@@ -213,9 +212,9 @@ class WorkflowEngine:
     async def _execute_node(
         self,
         node: WorkflowNode,
-        workflow_inputs: Dict[str, Any],
-        previous_results: Dict[str, Any],
-    ) -> Dict[str, Any]:
+        workflow_inputs: dict[str, Any],
+        previous_results: dict[str, Any],
+    ) -> dict[str, Any]:
         """Execute a workflow node.
 
         Args:
@@ -260,7 +259,7 @@ class WorkflowEngine:
     async def get_workflow(
         self,
         workflow_id: str,
-    ) -> Optional[WorkflowDAG]:
+    ) -> WorkflowDAG | None:
         """Get workflow by ID.
 
         Args:
@@ -271,7 +270,7 @@ class WorkflowEngine:
         """
         return self._workflows.get(workflow_id)
 
-    async def list_workflows(self) -> List[Dict[str, Any]]:
+    async def list_workflows(self) -> list[dict[str, Any]]:
         """List all workflows.
 
         Returns:

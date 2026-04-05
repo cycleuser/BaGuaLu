@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional, Set
+from typing import Any
 
 from bagualu.utils.logging import Logger
 
@@ -17,8 +17,8 @@ class WorkflowNode:
     id: str
     agent_role: str
     instruction: str
-    inputs: Dict[str, Any] = field(default_factory=dict)
-    dependencies: List[str] = field(default_factory=list)
+    inputs: dict[str, Any] = field(default_factory=dict)
+    dependencies: list[str] = field(default_factory=list)
     priority: int = 5
 
 
@@ -28,7 +28,7 @@ class WorkflowEdge:
 
     from_node: str
     to_node: str
-    condition: Optional[str] = None
+    condition: str | None = None
 
 
 class WorkflowDAG:
@@ -38,8 +38,8 @@ class WorkflowDAG:
         self,
         workflow_id: str,
         name: str,
-        nodes: List[WorkflowNode],
-        edges: List[WorkflowEdge],
+        nodes: list[WorkflowNode],
+        edges: list[WorkflowEdge],
     ) -> None:
         """Initialize workflow DAG.
 
@@ -54,16 +54,16 @@ class WorkflowDAG:
         self.nodes = nodes
         self.edges = edges
 
-        self._node_map: Dict[str, WorkflowNode] = {node.id: node for node in nodes}
+        self._node_map: dict[str, WorkflowNode] = {node.id: node for node in nodes}
 
-        self._dependency_map: Dict[str, Set[str]] = {}
+        self._dependency_map: dict[str, set[str]] = {}
 
         for node in nodes:
             self._dependency_map[node.id] = set(node.dependencies)
 
         logger.info(f"Workflow DAG created: {name} ({len(nodes)} nodes)")
 
-    def compute_execution_order(self) -> List[List[WorkflowNode]]:
+    def compute_execution_order(self) -> list[list[WorkflowNode]]:
         """Compute execution order (parallelizable levels).
 
         Returns:
@@ -96,7 +96,7 @@ class WorkflowDAG:
     def get_node(
         self,
         node_id: str,
-    ) -> Optional[WorkflowNode]:
+    ) -> WorkflowNode | None:
         """Get node by ID.
 
         Args:
@@ -110,7 +110,7 @@ class WorkflowDAG:
     def get_dependencies(
         self,
         node_id: str,
-    ) -> Set[str]:
+    ) -> set[str]:
         """Get node dependencies.
 
         Args:
@@ -121,7 +121,7 @@ class WorkflowDAG:
         """
         return self._dependency_map.get(node_id, set())
 
-    def validate(self) -> Dict[str, Any]:
+    def validate(self) -> dict[str, Any]:
         """Validate workflow DAG.
 
         Returns:
@@ -131,7 +131,7 @@ class WorkflowDAG:
 
         for node in self.nodes:
             if not node.id:
-                issues.append(f"Node missing ID")
+                issues.append("Node missing ID")
 
             if not node.instruction:
                 issues.append(f"Node {node.id} missing instruction")
@@ -150,7 +150,7 @@ class WorkflowDAG:
             "issues": issues,
         }
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary.
 
         Returns:

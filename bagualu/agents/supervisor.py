@@ -2,11 +2,10 @@
 
 from __future__ import annotations
 
-import asyncio
-from typing import Any, Dict, List, Optional, Set
 from datetime import datetime
+from typing import Any
 
-from bagualu.agents.base import BaseAgent, AgentRole, AgentContext
+from bagualu.agents.base import AgentRole, BaseAgent
 from bagualu.utils.logging import Logger
 
 logger = Logger.get_logger(__name__)
@@ -26,9 +25,9 @@ class SupervisorAgent(BaseAgent):
     def __init__(
         self,
         name: str,
-        provider: Optional[str] = None,
-        model: Optional[str] = None,
-        supervised_agents: Optional[List[str]] = None,
+        provider: str | None = None,
+        model: str | None = None,
+        supervised_agents: list[str] | None = None,
         quality_threshold: float = 0.85,
     ) -> None:
         """Initialize supervisor agent.
@@ -47,19 +46,19 @@ class SupervisorAgent(BaseAgent):
             model=model,
         )
 
-        self._supervised_agents: Set[str] = set(supervised_agents or [])
+        self._supervised_agents: set[str] = set(supervised_agents or [])
         self._quality_threshold = quality_threshold
-        self._quality_metrics: Dict[str, Dict[str, Any]] = {}
-        self._escalations: List[Dict[str, Any]] = []
-        self._optimization_history: List[Dict[str, Any]] = []
+        self._quality_metrics: dict[str, dict[str, Any]] = {}
+        self._escalations: list[dict[str, Any]] = []
+        self._optimization_history: list[dict[str, Any]] = []
 
         logger.info(f"Supervisor agent {name} initialized")
 
     async def process(
         self,
         instruction: str,
-        inputs: Optional[Dict[str, Any]] = None,
-    ) -> Dict[str, Any]:
+        inputs: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
         """Supervise task execution.
 
         Args:
@@ -90,8 +89,8 @@ class SupervisorAgent(BaseAgent):
     async def _supervise(
         self,
         instruction: str,
-        inputs: Dict[str, Any],
-    ) -> Dict[str, Any]:
+        inputs: dict[str, Any],
+    ) -> dict[str, Any]:
         """Perform supervision.
 
         Args:
@@ -114,8 +113,8 @@ class SupervisorAgent(BaseAgent):
 
     async def _validate_outputs(
         self,
-        inputs: Dict[str, Any],
-    ) -> Dict[str, Any]:
+        inputs: dict[str, Any],
+    ) -> dict[str, Any]:
         """Validate task outputs against quality threshold.
 
         Args:
@@ -150,7 +149,7 @@ class SupervisorAgent(BaseAgent):
 
     async def _assess_quality(
         self,
-        outputs: Dict[str, Any],
+        outputs: dict[str, Any],
     ) -> float:
         """Assess quality of outputs.
 
@@ -192,8 +191,8 @@ class SupervisorAgent(BaseAgent):
 
     async def _generate_quality_feedback(
         self,
-        outputs: Dict[str, Any],
-    ) -> List[str]:
+        outputs: dict[str, Any],
+    ) -> list[str]:
         """Generate feedback for improving output quality.
 
         Args:
@@ -226,8 +225,8 @@ class SupervisorAgent(BaseAgent):
 
     async def _monitor_agents(
         self,
-        inputs: Dict[str, Any],
-    ) -> Dict[str, Any]:
+        inputs: dict[str, Any],
+    ) -> dict[str, Any]:
         """Monitor supervised agents.
 
         Args:
@@ -269,8 +268,8 @@ class SupervisorAgent(BaseAgent):
 
     async def _optimize_workflow(
         self,
-        inputs: Dict[str, Any],
-    ) -> Dict[str, Any]:
+        inputs: dict[str, Any],
+    ) -> dict[str, Any]:
         """Optimize workflow execution based on historical data.
 
         Args:
@@ -311,8 +310,8 @@ class SupervisorAgent(BaseAgent):
     async def _general_supervision(
         self,
         instruction: str,
-        inputs: Dict[str, Any],
-    ) -> Dict[str, Any]:
+        inputs: dict[str, Any],
+    ) -> dict[str, Any]:
         """Perform general supervision.
 
         Args:
@@ -385,7 +384,7 @@ class SupervisorAgent(BaseAgent):
     async def update_agent_metrics(
         self,
         agent_id: str,
-        metrics: Dict[str, Any],
+        metrics: dict[str, Any],
     ) -> None:
         """Update metrics for a supervised agent.
 
@@ -398,7 +397,7 @@ class SupervisorAgent(BaseAgent):
 
         self._quality_metrics[agent_id].update(metrics)
 
-    async def get_supervision_report(self) -> Dict[str, Any]:
+    async def get_supervision_report(self) -> dict[str, Any]:
         """Get comprehensive supervision report.
 
         Returns:

@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
-from typing import Any
 
 from bagualu.utils.logging import Logger
 
@@ -349,7 +348,7 @@ def get_web_ui_html() -> str:
                 document.getElementById('total-agents').textContent = data.total_agents || 0;
                 document.getElementById('active-agents').textContent = data.agents?.filter(a => a.status === 'ready').length || 0;
                 document.getElementById('cluster-status').textContent = data.running ? 'Running' : 'Stopped';
-                
+
                 const agentList = document.getElementById('agent-list');
                 if (agentList && data.agents) {
                     agentList.innerHTML = data.agents.map(agent => `

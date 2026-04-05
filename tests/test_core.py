@@ -1,10 +1,10 @@
 """Tests for BaGuaLu core functionality."""
 
-import pytest
-from pathlib import Path
 
-from bagualu.core import BaGuaLuCore
+import pytest
+
 from bagualu.config import ConfigManager
+from bagualu.core import BaGuaLuCore
 
 
 @pytest.mark.asyncio

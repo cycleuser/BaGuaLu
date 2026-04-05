@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from rich.console import Console
 from rich.panel import Panel
-from rich.prompt import Prompt, Confirm
+from rich.prompt import Confirm, Prompt
 from rich.table import Table
 
 from bagualu.config.config_manager import ConfigManager
@@ -83,7 +83,7 @@ class ConfigWizard:
             ("9", "Skip (configure later)", "", ""),
         ]
 
-        for opt, name, ptype, url in providers:
+        for opt, name, ptype, _url in providers:
             status = ""
 
             if ptype == "local":

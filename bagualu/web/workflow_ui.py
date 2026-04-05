@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Dict, List
+from typing import Any
 
 
 class WorkflowUI:
@@ -26,7 +26,7 @@ class WorkflowUI:
         """
         self._workflow_engine = workflow_engine
 
-    async def render_workflow_canvas(self) -> Dict[str, Any]:
+    async def render_workflow_canvas(self) -> dict[str, Any]:
         """Render workflow canvas.
 
         Returns:
@@ -46,8 +46,8 @@ class WorkflowUI:
     async def create_node(
         self,
         node_type: str,
-        position: Dict[str, float],
-    ) -> Dict[str, Any]:
+        position: dict[str, float],
+    ) -> dict[str, Any]:
         """Create workflow node.
 
         Args:
@@ -67,7 +67,7 @@ class WorkflowUI:
         self,
         from_node: str,
         to_node: str,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Connect two nodes.
 
         Args:
@@ -85,8 +85,8 @@ class WorkflowUI:
 
     async def export_workflow(
         self,
-        canvas_state: Dict[str, Any],
-    ) -> Dict[str, Any]:
+        canvas_state: dict[str, Any],
+    ) -> dict[str, Any]:
         """Export workflow configuration.
 
         Args:

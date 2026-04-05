@@ -3,11 +3,10 @@
 from __future__ import annotations
 
 import asyncio
-import json
-import yaml
 from pathlib import Path
-from typing import Any, Dict, List, Optional
-from datetime import datetime
+from typing import Any
+
+import yaml
 
 from bagualu.config.providers import MultiProviderConfig, ProviderConfig
 from bagualu.utils.logging import Logger
@@ -28,7 +27,7 @@ class ConfigManager:
 
     def __init__(
         self,
-        config_path: Optional[Path] = None,
+        config_path: Path | None = None,
     ) -> None:
         """Initialize configuration manager.
 
@@ -37,7 +36,7 @@ class ConfigManager:
         """
         self._config_path = config_path or Path.home() / ".bagualu" / "config.yaml"
         self._providers = MultiProviderConfig()
-        self._settings: Dict[str, Any] = {}
+        self._settings: dict[str, Any] = {}
         self._loaded = False
 
         logger.info(f"Config manager initialized (path: {self._config_path})")
@@ -167,9 +166,9 @@ class ConfigManager:
     async def configure_provider(
         self,
         provider_name: str,
-        api_key: Optional[str] = None,
-        base_url: Optional[str] = None,
-        model: Optional[str] = None,
+        api_key: str | None = None,
+        base_url: str | None = None,
+        model: str | None = None,
     ) -> None:
         """Configure a specific provider.
 
@@ -223,7 +222,7 @@ class ConfigManager:
         else:
             logger.warning(f"Provider {provider_name} not found")
 
-    async def get_active_provider_config(self) -> Optional[ProviderConfig]:
+    async def get_active_provider_config(self) -> ProviderConfig | None:
         """Get active provider configuration.
 
         Returns:
@@ -234,7 +233,7 @@ class ConfigManager:
     async def get_provider_config(
         self,
         provider_name: str,
-    ) -> Optional[ProviderConfig]:
+    ) -> ProviderConfig | None:
         """Get specific provider configuration.
 
         Args:
@@ -245,7 +244,7 @@ class ConfigManager:
         """
         return self._providers.get_provider(provider_name)
 
-    async def list_providers(self) -> List[str]:
+    async def list_providers(self) -> list[str]:
         """List all configured providers.
 
         Returns:
@@ -287,7 +286,7 @@ class ConfigManager:
     async def add_coding_plan_key(
         self,
         api_key: str,
-        provider_name: Optional[str] = None,
+        provider_name: str | None = None,
     ) -> None:
         """Add Coding Plan API key (multiple keys support).
 
@@ -304,7 +303,7 @@ class ConfigManager:
 
         logger.info(f"Added Coding Plan API key for provider: {provider}")
 
-    async def get_all_coding_plan_keys(self) -> List[str]:
+    async def get_all_coding_plan_keys(self) -> list[str]:
         """Get all Coding Plan API keys.
 
         Returns:
@@ -325,6 +324,6 @@ class ConfigManager:
         return self._providers
 
     @property
-    def settings(self) -> Dict[str, Any]:
+    def settings(self) -> dict[str, Any]:
         """Get settings."""
         return self._settings

@@ -3,12 +3,12 @@
 from __future__ import annotations
 
 import asyncio
-from pathlib import Path
-from typing import Any, Dict, List, Optional, Set
 from datetime import datetime
+from pathlib import Path
+from typing import Any
 
+from bagualu.skills.evolver import EvolutionTrigger, EvolutionType, SkillEvolver
 from bagualu.skills.registry import SkillRegistry
-from bagualu.skills.evolver import SkillEvolver, EvolutionTrigger, EvolutionType
 from bagualu.skills.store import SkillStore
 from bagualu.utils.logging import Logger
 
@@ -28,7 +28,7 @@ class SkillEngine:
 
     def __init__(
         self,
-        skill_dirs: List[Path],
+        skill_dirs: list[Path],
         config_manager: Any,
     ) -> None:
         """Initialize skill engine.
@@ -43,8 +43,8 @@ class SkillEngine:
         self._evolver = SkillEvolver(self._registry)
         self._store = SkillStore()
         self._initialized = False
-        self._skill_cache: Dict[str, Any] = {}
-        self._execution_history: List[Dict[str, Any]] = []
+        self._skill_cache: dict[str, Any] = {}
+        self._execution_history: list[dict[str, Any]] = []
 
         logger.info(f"Skill engine initialized with {len(skill_dirs)} skill directories")
 
@@ -62,7 +62,7 @@ class SkillEngine:
     async def load_skill(
         self,
         skill_path: Path,
-    ) -> Optional[Dict[str, Any]]:
+    ) -> dict[str, Any] | None:
         """Load a skill from SKILL.md file.
 
         Args:
@@ -83,7 +83,7 @@ class SkillEngine:
     async def get_skill(
         self,
         skill_name: str,
-    ) -> Optional[Dict[str, Any]]:
+    ) -> dict[str, Any] | None:
         """Get skill by name.
 
         Args:
@@ -106,7 +106,7 @@ class SkillEngine:
         self,
         query: str,
         limit: int = 5,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """Find skills relevant to a query.
 
         Args:
@@ -123,9 +123,9 @@ class SkillEngine:
     async def execute_skill(
         self,
         skill_name: str,
-        inputs: Dict[str, Any],
-        agent: Optional[Any] = None,
-    ) -> Dict[str, Any]:
+        inputs: dict[str, Any],
+        agent: Any | None = None,
+    ) -> dict[str, Any]:
         """Execute a skill.
 
         Args:
@@ -182,10 +182,10 @@ class SkillEngine:
 
     async def _execute_skill_internal(
         self,
-        skill_def: Dict[str, Any],
-        inputs: Dict[str, Any],
-        agent: Optional[Any],
-    ) -> Dict[str, Any]:
+        skill_def: dict[str, Any],
+        inputs: dict[str, Any],
+        agent: Any | None,
+    ) -> dict[str, Any]:
         """Internal skill execution.
 
         Args:
@@ -288,7 +288,7 @@ class SkillEngine:
 
     async def _trigger_post_execution_analysis(
         self,
-        execution_record: Dict[str, Any],
+        execution_record: dict[str, Any],
     ) -> None:
         """Trigger post-execution analysis for potential evolution.
 
@@ -310,7 +310,7 @@ class SkillEngine:
     async def get_skill_lineage(
         self,
         skill_name: str,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Get skill version lineage.
 
         Args:
@@ -323,7 +323,7 @@ class SkillEngine:
 
         return lineage
 
-    async def get_all_skills(self) -> List[Dict[str, Any]]:
+    async def get_all_skills(self) -> list[dict[str, Any]]:
         """Get all registered skills.
 
         Returns:
@@ -336,7 +336,7 @@ class SkillEngine:
     async def import_skill_from_opencode(
         self,
         skill_dir: Path,
-    ) -> Optional[Dict[str, Any]]:
+    ) -> dict[str, Any] | None:
         """Import skill from OpenCode/Claude Code skill directory.
 
         Args:
@@ -355,8 +355,8 @@ class SkillEngine:
 
     async def get_execution_statistics(
         self,
-        skill_name: Optional[str] = None,
-    ) -> Dict[str, Any]:
+        skill_name: str | None = None,
+    ) -> dict[str, Any]:
         """Get execution statistics.
 
         Args:
@@ -384,7 +384,7 @@ class SkillEngine:
         self,
         skill_name: str,
         keep_versions: int = 5,
-    ) -> List[str]:
+    ) -> list[str]:
         """Clean up old skill versions.
 
         Args:

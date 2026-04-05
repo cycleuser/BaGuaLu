@@ -2,22 +2,18 @@
 
 from __future__ import annotations
 
-import asyncio
 import hashlib
-import json
-import re
 from dataclasses import dataclass, field
 from datetime import datetime
-from enum import Enum
-from pathlib import Path
-from typing import Any, Dict, List, Optional, Set
+from enum import StrEnum
+from typing import Any
 
 from bagualu.utils.logging import Logger
 
 logger = Logger.get_logger(__name__)
 
 
-class EvolutionTrigger(str, Enum):
+class EvolutionTrigger(StrEnum):
     """Evolution trigger sources."""
 
     MANUAL = "manual"
@@ -27,7 +23,7 @@ class EvolutionTrigger(str, Enum):
     ANALYSIS = "analysis"
 
 
-class EvolutionType(str, Enum):
+class EvolutionType(StrEnum):
     """Evolution types."""
 
     FIX = "fix"
@@ -41,12 +37,12 @@ class EvolutionContext:
     """Evolution context information."""
 
     skill_name: str
-    skill_def: Dict[str, Any]
+    skill_def: dict[str, Any]
     trigger: EvolutionTrigger
     evolution_type: EvolutionType
-    execution_history: List[Dict[str, Any]] = field(default_factory=list)
-    failure_patterns: List[str] = field(default_factory=list)
-    suggestions: List[str] = field(default_factory=list)
+    execution_history: list[dict[str, Any]] = field(default_factory=list)
+    failure_patterns: list[str] = field(default_factory=list)
+    suggestions: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -57,8 +53,8 @@ class EvolutionResult:
     skill_name: str
     evolution_type: EvolutionType
     new_version: str
-    changes: Dict[str, Any]
-    lineage: Dict[str, Any]
+    changes: dict[str, Any]
+    lineage: dict[str, Any]
     timestamp: datetime = field(default_factory=datetime.now)
 
 
@@ -93,7 +89,7 @@ class SkillEvolver:
         self._registry = registry
         self._max_iterations = max_iterations
         self._quality_threshold = quality_threshold
-        self._evolution_history: Dict[str, List[EvolutionResult]] = {}
+        self._evolution_history: dict[str, list[EvolutionResult]] = {}
 
         logger.info("Skill evolver initialized")
 
@@ -101,7 +97,7 @@ class SkillEvolver:
         self,
         context: EvolutionContext,
         evolution_type: EvolutionType,
-    ) -> Optional[Dict[str, Any]]:
+    ) -> dict[str, Any] | None:
         """Execute skill evolution.
 
         Args:
@@ -129,7 +125,7 @@ class SkillEvolver:
     async def _fix_skill(
         self,
         context: EvolutionContext,
-    ) -> Optional[Dict[str, Any]]:
+    ) -> dict[str, Any] | None:
         """Fix broken or outdated skill instructions.
 
         Args:
@@ -195,7 +191,7 @@ class SkillEvolver:
     async def _derive_skill(
         self,
         context: EvolutionContext,
-    ) -> Optional[Dict[str, Any]]:
+    ) -> dict[str, Any] | None:
         """Derive enhanced skill from parent.
 
         Args:
@@ -252,7 +248,7 @@ class SkillEvolver:
     async def _capture_skill(
         self,
         context: EvolutionContext,
-    ) -> Optional[Dict[str, Any]]:
+    ) -> dict[str, Any] | None:
         """Capture novel pattern from successful executions.
 
         Args:
@@ -307,8 +303,8 @@ class SkillEvolver:
 
     async def _analyze_failures(
         self,
-        execution_history: List[Dict[str, Any]],
-    ) -> List[str]:
+        execution_history: list[dict[str, Any]],
+    ) -> list[str]:
         """Analyze execution failures to identify patterns.
 
         Args:
@@ -333,8 +329,8 @@ class SkillEvolver:
     async def _generate_fix_suggestions(
         self,
         instructions: str,
-        failure_patterns: List[str],
-    ) -> List[str]:
+        failure_patterns: list[str],
+    ) -> list[str]:
         """Generate fix suggestions based on failure patterns.
 
         Args:
@@ -361,7 +357,7 @@ class SkillEvolver:
     async def _apply_fixes(
         self,
         instructions: str,
-        fix_suggestions: List[str],
+        fix_suggestions: list[str],
     ) -> str:
         """Apply fix suggestions to instructions.
 
@@ -387,7 +383,7 @@ class SkillEvolver:
     async def _identify_enhancements(
         self,
         context: EvolutionContext,
-    ) -> List[str]:
+    ) -> list[str]:
         """Identify potential enhancements for derivation.
 
         Args:
@@ -413,7 +409,7 @@ class SkillEvolver:
     async def _generate_derived_instructions(
         self,
         base_instructions: str,
-        enhancements: List[str],
+        enhancements: list[str],
     ) -> str:
         """Generate derived instructions with enhancements.
 
@@ -436,8 +432,8 @@ class SkillEvolver:
 
     async def _extract_pattern(
         self,
-        executions: List[Dict[str, Any]],
-    ) -> Optional[str]:
+        executions: list[dict[str, Any]],
+    ) -> str | None:
         """Extract reusable pattern from successful executions.
 
         Args:
@@ -458,11 +454,11 @@ class SkillEvolver:
                 if key not in common_inputs:
                     common_inputs.append(key)
 
-        pattern = f"## Pattern\n\n"
+        pattern = "## Pattern\n\n"
         pattern += f"Successfully executed {len(executions)} times.\n\n"
         pattern += f"Common inputs: {', '.join(common_inputs)}\n\n"
-        pattern += f"## Instructions\n\n"
-        pattern += f"Follow the successful execution pattern.\n\n"
+        pattern += "## Instructions\n\n"
+        pattern += "Follow the successful execution pattern.\n\n"
 
         return pattern
 
@@ -524,7 +520,7 @@ class SkillEvolver:
     async def get_evolution_history(
         self,
         skill_name: str,
-    ) -> List[EvolutionResult]:
+    ) -> list[EvolutionResult]:
         """Get evolution history for a skill.
 
         Args:
@@ -535,7 +531,7 @@ class SkillEvolver:
         """
         return self._evolution_history.get(skill_name, [])
 
-    async def get_all_evolution_statistics(self) -> Dict[str, Any]:
+    async def get_all_evolution_statistics(self) -> dict[str, Any]:
         """Get overall evolution statistics.
 
         Returns:

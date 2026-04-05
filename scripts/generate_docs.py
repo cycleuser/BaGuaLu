@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """Generate project documentation and architecture diagrams."""
 
-import subprocess
 from pathlib import Path
 
 
@@ -25,7 +24,7 @@ def generate_architecture_diagram():
     print("""
     BaGuaLu Architecture
     ====================
-    
+
     ┌─────────────────────────────────────────┐
     │           CLI / Web Interface           │
     └─────────────────┬───────────────────────┘

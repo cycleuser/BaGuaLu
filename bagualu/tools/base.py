@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-import asyncio
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional, Type
+from typing import Any
+
 from pydantic import BaseModel
 
 from bagualu.utils.logging import Logger
@@ -18,8 +18,8 @@ class ToolResult:
     """Tool execution result."""
 
     output: Any
-    error: Optional[str] = None
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    error: str | None = None
+    metadata: dict[str, Any] = field(default_factory=dict)
 
     def is_success(self) -> bool:
         """Check if execution succeeded."""
@@ -32,8 +32,8 @@ class ToolExecutionContext:
 
     agent_id: str
     session_id: str
-    workspace: Optional[str] = None
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    workspace: str | None = None
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 class BaseTool(ABC):
@@ -48,12 +48,12 @@ class BaseTool(ABC):
 
     name: str = "base_tool"
     description: str = "Base tool"
-    input_model: Optional[Type[BaseModel]] = None
+    input_model: type[BaseModel] | None = None
 
     @abstractmethod
     async def execute(
         self,
-        arguments: Dict[str, Any],
+        arguments: dict[str, Any],
         context: ToolExecutionContext,
     ) -> ToolResult:
         """Execute the tool.
@@ -69,8 +69,8 @@ class BaseTool(ABC):
 
     def validate_input(
         self,
-        arguments: Dict[str, Any],
-    ) -> Optional[BaseModel]:
+        arguments: dict[str, Any],
+    ) -> BaseModel | None:
         """Validate input using Pydantic model.
 
         Args:
@@ -88,7 +88,7 @@ class BaseTool(ABC):
             logger.error(f"Input validation failed for {self.name}: {e}")
             return None
 
-    def get_schema(self) -> Dict[str, Any]:
+    def get_schema(self) -> dict[str, Any]:
         """Get tool JSON schema.
 
         Returns:
@@ -110,7 +110,7 @@ class ToolRegistry:
 
     def __init__(self) -> None:
         """Initialize tool registry."""
-        self._tools: Dict[str, BaseTool] = {}
+        self._tools: dict[str, BaseTool] = {}
 
     def register(
         self,
@@ -144,7 +144,7 @@ class ToolRegistry:
     def get_tool(
         self,
         tool_name: str,
-    ) -> Optional[BaseTool]:
+    ) -> BaseTool | None:
         """Get tool by name.
 
         Args:
@@ -155,7 +155,7 @@ class ToolRegistry:
         """
         return self._tools.get(tool_name)
 
-    def list_tools(self) -> List[str]:
+    def list_tools(self) -> list[str]:
         """List all registered tools.
 
         Returns:
@@ -163,7 +163,7 @@ class ToolRegistry:
         """
         return list(self._tools.keys())
 
-    def get_all_schemas(self) -> List[Dict[str, Any]]:
+    def get_all_schemas(self) -> list[dict[str, Any]]:
         """Get all tool schemas.
 
         Returns:
@@ -174,7 +174,7 @@ class ToolRegistry:
     async def execute_tool(
         self,
         tool_name: str,
-        arguments: Dict[str, Any],
+        arguments: dict[str, Any],
         context: ToolExecutionContext,
     ) -> ToolResult:
         """Execute a tool.

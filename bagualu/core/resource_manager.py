@@ -4,16 +4,16 @@ from __future__ import annotations
 
 import asyncio
 from dataclasses import dataclass, field
-from enum import Enum
-from typing import Any, Dict, List, Optional
 from datetime import datetime, timedelta
+from enum import StrEnum
+from typing import Any
 
 from bagualu.utils.logging import Logger
 
 logger = Logger.get_logger(__name__)
 
 
-class ResourceType(str, Enum):
+class ResourceType(StrEnum):
     """Resource types."""
 
     AGENT = "agent"
@@ -22,7 +22,7 @@ class ResourceType(str, Enum):
     NETWORK = "network"
 
 
-class AgentState(str, Enum):
+class AgentState(StrEnum):
     """Agent states."""
 
     IDLE = "idle"
@@ -39,12 +39,12 @@ class AgentInfo:
     name: str
     role: str
     state: AgentState = AgentState.IDLE
-    provider: Optional[str] = None
-    model: Optional[str] = None
-    skills: List[str] = field(default_factory=list)
-    current_task: Optional[str] = None
-    allocated_at: Optional[datetime] = None
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    provider: str | None = None
+    model: str | None = None
+    skills: list[str] = field(default_factory=list)
+    current_task: str | None = None
+    allocated_at: datetime | None = None
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -53,8 +53,8 @@ class ResourceRequest:
 
     request_id: str
     task_id: str
-    required_role: Optional[str] = None
-    required_skills: List[str] = field(default_factory=list)
+    required_role: str | None = None
+    required_skills: list[str] = field(default_factory=list)
     priority: int = 5
     timeout: timedelta = field(default_factory=lambda: timedelta(minutes=30))
     created_at: datetime = field(default_factory=datetime.now)
@@ -83,9 +83,9 @@ class ResourceManager:
         """
         self._cluster = cluster
         self._max_concurrent_agents = max_concurrent_agents
-        self._agents: Dict[str, AgentInfo] = {}
+        self._agents: dict[str, AgentInfo] = {}
         self._allocation_queue: asyncio.Queue[ResourceRequest] = asyncio.Queue()
-        self._pending_requests: Dict[str, ResourceRequest] = {}
+        self._pending_requests: dict[str, ResourceRequest] = {}
         self._running = False
 
         logger.info(f"Resource manager initialized (max agents: {max_concurrent_agents})")
@@ -101,9 +101,9 @@ class ResourceManager:
         agent_id: str,
         name: str,
         role: str,
-        provider: Optional[str] = None,
-        model: Optional[str] = None,
-        skills: Optional[List[str]] = None,
+        provider: str | None = None,
+        model: str | None = None,
+        skills: list[str] | None = None,
     ) -> None:
         """Register a new agent.
 
@@ -165,7 +165,7 @@ class ResourceManager:
 
             logger.info(f"Allocated agent {agent_id} for task {task.id}")
             return agent_id
-        except asyncio.TimeoutError:
+        except TimeoutError:
             self._pending_requests.pop(request.request_id, None)
             raise ValueError(f"No agent available for task {task.id} within timeout")
 
@@ -243,7 +243,7 @@ class ResourceManager:
     async def get_agent_status(
         self,
         agent_id: str,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Get agent status.
 
         Args:
@@ -268,7 +268,7 @@ class ResourceManager:
             "allocated_at": agent.allocated_at.isoformat() if agent.allocated_at else None,
         }
 
-    async def get_all_agents_status(self) -> List[Dict[str, Any]]:
+    async def get_all_agents_status(self) -> list[dict[str, Any]]:
         """Get status of all agents.
 
         Returns:
@@ -279,7 +279,7 @@ class ResourceManager:
     async def cleanup_stale_agents(
         self,
         max_idle_time: timedelta = timedelta(hours=1),
-    ) -> List[str]:
+    ) -> list[str]:
         """Clean up agents that have been idle for too long.
 
         Args:

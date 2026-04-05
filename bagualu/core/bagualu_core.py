@@ -2,15 +2,14 @@
 
 from __future__ import annotations
 
-import asyncio
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from bagualu.agents import AgentCluster
 from bagualu.config import ConfigManager
 from bagualu.skills import SkillEngine
-from bagualu.workflow import WorkflowEngine
 from bagualu.utils.logging import Logger
+from bagualu.workflow import WorkflowEngine
 
 logger = Logger.get_logger(__name__)
 
@@ -28,9 +27,9 @@ class BaGuaLuCore:
 
     def __init__(
         self,
-        config_path: Optional[Path] = None,
-        workspace: Optional[Path] = None,
-        skill_dirs: Optional[List[Path]] = None,
+        config_path: Path | None = None,
+        workspace: Path | None = None,
+        skill_dirs: list[Path] | None = None,
     ) -> None:
         """Initialize BaGuaLu core system.
 
@@ -65,9 +64,9 @@ class BaGuaLuCore:
         self,
         name: str,
         role: str = "executor",
-        provider: Optional[str] = None,
-        model: Optional[str] = None,
-        skills: Optional[List[str]] = None,
+        provider: str | None = None,
+        model: str | None = None,
+        skills: list[str] | None = None,
     ) -> str:
         """Deploy a single agent with specified configuration.
 
@@ -96,8 +95,8 @@ class BaGuaLuCore:
 
     async def deploy_cluster(
         self,
-        cluster_config: Dict[str, Any],
-    ) -> List[str]:
+        cluster_config: dict[str, Any],
+    ) -> list[str]:
         """Deploy an agent cluster from configuration.
 
         Args:
@@ -123,8 +122,8 @@ class BaGuaLuCore:
     async def execute_workflow(
         self,
         workflow_id: str,
-        inputs: Optional[Dict[str, Any]] = None,
-    ) -> Dict[str, Any]:
+        inputs: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
         """Execute a workflow with specified inputs.
 
         Args:
@@ -142,7 +141,7 @@ class BaGuaLuCore:
 
     async def create_workflow(
         self,
-        workflow_config: Dict[str, Any],
+        workflow_config: dict[str, Any],
     ) -> str:
         """Create a new workflow from configuration.
 

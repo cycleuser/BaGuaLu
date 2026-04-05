@@ -2,9 +2,10 @@
 """Test server startup."""
 
 import subprocess
-import time
-import requests
 import sys
+import time
+
+import requests
 
 
 def test_server():

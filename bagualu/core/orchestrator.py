@@ -4,17 +4,16 @@ from __future__ import annotations
 
 import asyncio
 from dataclasses import dataclass, field
-from enum import Enum
-from pathlib import Path
-from typing import Any, Dict, List, Optional, Set
 from datetime import datetime
+from enum import StrEnum
+from typing import Any
 
 from bagualu.utils.logging import Logger
 
 logger = Logger.get_logger(__name__)
 
 
-class OrchestrationStrategy(str, Enum):
+class OrchestrationStrategy(StrEnum):
     """Orchestration strategies for agent coordination."""
 
     SEQUENTIAL = "sequential"
@@ -29,13 +28,13 @@ class OrchestrationContext:
     """Context for orchestration execution."""
 
     workflow_id: str
-    inputs: Dict[str, Any] = field(default_factory=dict)
-    outputs: Dict[str, Any] = field(default_factory=dict)
-    active_agents: Set[str] = field(default_factory=set)
-    completed_tasks: List[str] = field(default_factory=list)
-    failed_tasks: List[str] = field(default_factory=list)
+    inputs: dict[str, Any] = field(default_factory=dict)
+    outputs: dict[str, Any] = field(default_factory=dict)
+    active_agents: set[str] = field(default_factory=set)
+    completed_tasks: list[str] = field(default_factory=list)
+    failed_tasks: list[str] = field(default_factory=list)
     start_time: datetime = field(default_factory=datetime.now)
-    end_time: Optional[datetime] = None
+    end_time: datetime | None = None
     strategy: OrchestrationStrategy = OrchestrationStrategy.ADAPTIVE
 
 
@@ -63,7 +62,7 @@ class Orchestrator:
         """
         self._workflow_engine = workflow_engine
         self._resource_manager = resource_manager
-        self._active_contexts: Dict[str, OrchestrationContext] = {}
+        self._active_contexts: dict[str, OrchestrationContext] = {}
         self._task_queue: asyncio.Queue = asyncio.Queue()
         self._running = False
 
@@ -72,9 +71,9 @@ class Orchestrator:
     async def orchestrate(
         self,
         workflow_id: str,
-        inputs: Dict[str, Any],
+        inputs: dict[str, Any],
         strategy: OrchestrationStrategy = OrchestrationStrategy.ADAPTIVE,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Orchestrate workflow execution.
 
         Args:
@@ -123,7 +122,7 @@ class Orchestrator:
         self,
         workflow: Any,
         strategy: OrchestrationStrategy,
-    ) -> List[List[str]]:
+    ) -> list[list[str]]:
         """Plan execution order based on workflow DAG and strategy.
 
         Args:
@@ -144,7 +143,7 @@ class Orchestrator:
     async def _compute_execution_levels(
         self,
         workflow: Any,
-    ) -> List[List[str]]:
+    ) -> list[list[str]]:
         """Compute execution levels for DAG-based execution.
 
         Tasks at the same level can be executed in parallel.
@@ -172,9 +171,9 @@ class Orchestrator:
     async def _execute_workflow(
         self,
         workflow: Any,
-        execution_order: List[List[str]],
+        execution_order: list[list[str]],
         context: OrchestrationContext,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Execute workflow according to planned order.
 
         Args:
@@ -193,7 +192,7 @@ class Orchestrator:
                 return_exceptions=True,
             )
 
-            for task_id, result in zip(batch, batch_results):
+            for task_id, result in zip(batch, batch_results, strict=False):
                 if isinstance(result, Exception):
                     context.failed_tasks.append(task_id)
                     logger.error(f"Task {task_id} failed: {result}")
@@ -247,7 +246,7 @@ class Orchestrator:
                 )
 
                 await self.orchestrate(workflow_id, inputs)
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 continue
             except Exception as e:
                 logger.error(f"Continuous orchestration error: {e}")
@@ -259,7 +258,7 @@ class Orchestrator:
     async def queue_workflow(
         self,
         workflow_id: str,
-        inputs: Dict[str, Any],
+        inputs: dict[str, Any],
     ) -> None:
         """Queue a workflow for execution.
 

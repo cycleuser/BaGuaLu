@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 import json
-from typing import Any, Dict, List, Optional
+from typing import Any
 
-from bagualu.agents.base import BaseAgent, AgentRole, AgentContext, SkillDefinition
+from bagualu.agents.base import AgentContext, AgentRole, BaseAgent
 from bagualu.utils.logging import Logger
 
 logger = Logger.get_logger(__name__)
@@ -24,9 +24,9 @@ class ExecutorAgent(BaseAgent):
     def __init__(
         self,
         name: str,
-        provider: Optional[str] = None,
-        model: Optional[str] = None,
-        skills: Optional[List[str]] = None,
+        provider: str | None = None,
+        model: str | None = None,
+        skills: list[str] | None = None,
         max_retries: int = 3,
     ) -> None:
         """Initialize executor agent.
@@ -47,7 +47,7 @@ class ExecutorAgent(BaseAgent):
         )
 
         self._max_retries = max_retries
-        self._execution_history: List[Dict[str, Any]] = []
+        self._execution_history: list[dict[str, Any]] = []
         self._success_rate = 0.0
 
         logger.info(f"Executor agent {name} initialized")
@@ -55,8 +55,8 @@ class ExecutorAgent(BaseAgent):
     async def process(
         self,
         instruction: str,
-        inputs: Optional[Dict[str, Any]] = None,
-    ) -> Dict[str, Any]:
+        inputs: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
         """Execute a task.
 
         Args:
@@ -128,8 +128,8 @@ class ExecutorAgent(BaseAgent):
     async def _execute_with_skills(
         self,
         instruction: str,
-        inputs: Dict[str, Any],
-    ) -> Dict[str, Any]:
+        inputs: dict[str, Any],
+    ) -> dict[str, Any]:
         """Execute task using loaded skills.
 
         Args:
@@ -166,8 +166,8 @@ class ExecutorAgent(BaseAgent):
     async def _execute_without_skills(
         self,
         instruction: str,
-        inputs: Dict[str, Any],
-    ) -> Dict[str, Any]:
+        inputs: dict[str, Any],
+    ) -> dict[str, Any]:
         """Execute task without skills (direct LLM call).
 
         Args:
@@ -200,7 +200,7 @@ class ExecutorAgent(BaseAgent):
     async def _find_relevant_skills(
         self,
         instruction: str,
-    ) -> List[str]:
+    ) -> list[str]:
         """Find skills relevant to the instruction.
 
         Args:
@@ -254,8 +254,8 @@ class ExecutorAgent(BaseAgent):
 
     async def _analyze_failures(
         self,
-        failures: List[Dict[str, Any]],
-    ) -> Optional[str]:
+        failures: list[dict[str, Any]],
+    ) -> str | None:
         """Analyze failure patterns to generate evolution suggestions.
 
         Args:
@@ -294,7 +294,7 @@ class ExecutorAgent(BaseAgent):
             successful_executions / total_executions if total_executions > 0 else 0.0
         )
 
-    async def get_performance_metrics(self) -> Dict[str, Any]:
+    async def get_performance_metrics(self) -> dict[str, Any]:
         """Get performance metrics for this executor.
 
         Returns:

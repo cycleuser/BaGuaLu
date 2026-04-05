@@ -4,11 +4,10 @@ from __future__ import annotations
 
 import asyncio
 import hashlib
-import json
 import re
-from pathlib import Path
-from typing import Any, Dict, List, Optional
 from datetime import datetime
+from pathlib import Path
+from typing import Any
 
 from bagualu.utils.logging import Logger
 
@@ -27,7 +26,7 @@ class SkillRegistry:
 
     def __init__(
         self,
-        skill_dirs: List[Path],
+        skill_dirs: list[Path],
     ) -> None:
         """Initialize skill registry.
 
@@ -35,14 +34,14 @@ class SkillRegistry:
             skill_dirs: List of skill directories
         """
         self._skill_dirs = skill_dirs
-        self._skills: Dict[str, Dict[str, Any]] = {}
-        self._skill_metadata: Dict[str, Dict[str, Any]] = {}
-        self._skill_embeddings: Dict[str, List[float]] = {}
+        self._skills: dict[str, dict[str, Any]] = {}
+        self._skill_metadata: dict[str, dict[str, Any]] = {}
+        self._skill_embeddings: dict[str, list[float]] = {}
         self._initialized = False
 
         logger.info(f"Skill registry initialized with {len(skill_dirs)} directories")
 
-    async def discover_skills(self) -> List[str]:
+    async def discover_skills(self) -> list[str]:
         """Discover skills from configured directories.
 
         Returns:
@@ -67,7 +66,7 @@ class SkillRegistry:
     async def _discover_in_directory(
         self,
         directory: Path,
-    ) -> List[str]:
+    ) -> list[str]:
         """Discover skills in a directory.
 
         Args:
@@ -101,7 +100,7 @@ class SkillRegistry:
     async def _parse_skill_file(
         self,
         skill_file: Path,
-    ) -> Optional[Dict[str, Any]]:
+    ) -> dict[str, Any] | None:
         """Parse SKILL.md file.
 
         Args:
@@ -144,10 +143,7 @@ class SkillRegistry:
                 current_section = "examples"
                 continue
             elif line.startswith("##") or line.startswith("#"):
-                if not instructions:
-                    current_section = "description"
-                else:
-                    current_section = "instructions"
+                current_section = "description" if not instructions else "instructions"
                 continue
 
             if current_section == "description":
@@ -217,7 +213,7 @@ class SkillRegistry:
     async def load_skill(
         self,
         skill_path: Path,
-    ) -> Optional[Dict[str, Any]]:
+    ) -> dict[str, Any] | None:
         """Load a skill from a specific path.
 
         Args:
@@ -236,7 +232,7 @@ class SkillRegistry:
     async def get_skill(
         self,
         skill_name: str,
-    ) -> Optional[Dict[str, Any]]:
+    ) -> dict[str, Any] | None:
         """Get skill by name.
 
         Args:
@@ -247,7 +243,7 @@ class SkillRegistry:
         """
         return self._skills.get(skill_name)
 
-    async def get_all_skills(self) -> List[Dict[str, Any]]:
+    async def get_all_skills(self) -> list[dict[str, Any]]:
         """Get all registered skills.
 
         Returns:
@@ -259,7 +255,7 @@ class SkillRegistry:
         self,
         query: str,
         limit: int = 10,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """Search skills by query.
 
         Args:
@@ -296,7 +292,7 @@ class SkillRegistry:
 
     def _compute_search_score(
         self,
-        skill_def: Dict[str, Any],
+        skill_def: dict[str, Any],
         query: str,
     ) -> float:
         """Compute search score for skill.
@@ -332,7 +328,7 @@ class SkillRegistry:
 
     async def register_skill(
         self,
-        skill_def: Dict[str, Any],
+        skill_def: dict[str, Any],
     ) -> bool:
         """Register a skill manually.
 
@@ -383,7 +379,7 @@ class SkillRegistry:
     async def get_skill_metadata(
         self,
         skill_name: str,
-    ) -> Optional[Dict[str, Any]]:
+    ) -> dict[str, Any] | None:
         """Get skill metadata.
 
         Args:
@@ -396,8 +392,8 @@ class SkillRegistry:
 
     async def validate_skill(
         self,
-        skill_def: Dict[str, Any],
-    ) -> Dict[str, Any]:
+        skill_def: dict[str, Any],
+    ) -> dict[str, Any]:
         """Validate skill definition.
 
         Args:
@@ -423,7 +419,7 @@ class SkillRegistry:
             "skill_name": skill_def.get("name", "unknown"),
         }
 
-    async def get_registry_statistics(self) -> Dict[str, Any]:
+    async def get_registry_statistics(self) -> dict[str, Any]:
         """Get registry statistics.
 
         Returns:

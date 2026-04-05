@@ -2,16 +2,13 @@
 
 from __future__ import annotations
 
-import asyncio
-import json
-from pathlib import Path
-from typing import Any, Dict, List, Optional, Set
 from datetime import datetime
+from typing import Any
 
-from bagualu.agents.base import BaseAgent, AgentRole, AgentStatus
+from bagualu.agents.base import AgentRole, BaseAgent
 from bagualu.agents.executor import ExecutorAgent
-from bagualu.agents.supervisor import SupervisorAgent
 from bagualu.agents.scheduler import SchedulerAgent
+from bagualu.agents.supervisor import SupervisorAgent
 from bagualu.utils.logging import Logger
 
 logger = Logger.get_logger(__name__)
@@ -41,9 +38,9 @@ class AgentCluster:
         """
         self._config_manager = config_manager
         self._skill_engine = skill_engine
-        self._agents: Dict[str, BaseAgent] = {}
-        self._agent_metadata: Dict[str, Dict[str, Any]] = {}
-        self._connections: Dict[str, Set[str]] = {}
+        self._agents: dict[str, BaseAgent] = {}
+        self._agent_metadata: dict[str, dict[str, Any]] = {}
+        self._connections: dict[str, set[str]] = {}
         self._running = False
 
         logger.info("Agent cluster initialized")
@@ -57,9 +54,9 @@ class AgentCluster:
         self,
         name: str,
         role: str = "executor",
-        provider: Optional[str] = None,
-        model: Optional[str] = None,
-        skills: Optional[List[str]] = None,
+        provider: str | None = None,
+        model: str | None = None,
+        skills: list[str] | None = None,
     ) -> str:
         """Deploy a single agent.
 
@@ -122,8 +119,8 @@ class AgentCluster:
 
     async def deploy_from_config(
         self,
-        cluster_config: Dict[str, Any],
-    ) -> List[str]:
+        cluster_config: dict[str, Any],
+    ) -> list[str]:
         """Deploy agent cluster from configuration.
 
         Args:
@@ -166,9 +163,9 @@ class AgentCluster:
 
     async def _setup_connections(
         self,
-        agent_ids: List[str],
-        connections_config: List[Dict[str, Any]],
-        agents_config: List[Dict[str, Any]],
+        agent_ids: list[str],
+        connections_config: list[dict[str, Any]],
+        agents_config: list[dict[str, Any]],
     ) -> None:
         """Setup agent connections.
 
@@ -178,7 +175,7 @@ class AgentCluster:
             agents_config: Agent configurations
         """
         name_to_id = {}
-        for agent_id, agent_def in zip(agent_ids, agents_config):
+        for agent_id, agent_def in zip(agent_ids, agents_config, strict=False):
             name_to_id[agent_def.get("name")] = agent_id
 
         for connection in connections_config:
@@ -232,7 +229,7 @@ class AgentCluster:
     async def get_agent(
         self,
         agent_id: str,
-    ) -> Optional[BaseAgent]:
+    ) -> BaseAgent | None:
         """Get agent by ID.
 
         Args:
@@ -246,7 +243,7 @@ class AgentCluster:
     async def get_agent_by_name(
         self,
         name: str,
-    ) -> Optional[BaseAgent]:
+    ) -> BaseAgent | None:
         """Get agent by name.
 
         Args:
@@ -265,8 +262,8 @@ class AgentCluster:
         self,
         agent_id: str,
         instruction: str,
-        inputs: Optional[Dict[str, Any]] = None,
-    ) -> Dict[str, Any]:
+        inputs: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
         """Execute a task with specific agent.
 
         Args:
@@ -291,9 +288,9 @@ class AgentCluster:
 
     async def broadcast_to_agents(
         self,
-        agent_ids: List[str],
-        message: Dict[str, Any],
-    ) -> Dict[str, Any]:
+        agent_ids: list[str],
+        message: dict[str, Any],
+    ) -> dict[str, Any]:
         """Broadcast message to multiple agents.
 
         Args:
@@ -316,7 +313,7 @@ class AgentCluster:
 
         return results
 
-    async def evolve_all_agents(self) -> Dict[str, Any]:
+    async def evolve_all_agents(self) -> dict[str, Any]:
         """Trigger evolution for all agents.
 
         Returns:
@@ -335,7 +332,7 @@ class AgentCluster:
 
         return evolution_results
 
-    async def get_cluster_status(self) -> Dict[str, Any]:
+    async def get_cluster_status(self) -> dict[str, Any]:
         """Get cluster status.
 
         Returns:
@@ -369,8 +366,8 @@ class AgentCluster:
     async def scale_cluster(
         self,
         target_size: int,
-        role_distribution: Optional[Dict[str, int]] = None,
-    ) -> List[str]:
+        role_distribution: dict[str, int] | None = None,
+    ) -> list[str]:
         """Scale cluster to target size.
 
         Args:

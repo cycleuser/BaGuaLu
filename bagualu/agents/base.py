@@ -6,17 +6,17 @@ import asyncio
 import json
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from enum import Enum
-from pathlib import Path
-from typing import Any, Dict, List, Optional, Set
 from datetime import datetime
+from enum import StrEnum
+from pathlib import Path
+from typing import Any
 
 from bagualu.utils.logging import Logger
 
 logger = Logger.get_logger(__name__)
 
 
-class AgentRole(str, Enum):
+class AgentRole(StrEnum):
     """Agent roles."""
 
     EXECUTOR = "executor"
@@ -26,7 +26,7 @@ class AgentRole(str, Enum):
     COORDINATOR = "coordinator"
 
 
-class AgentStatus(str, Enum):
+class AgentStatus(StrEnum):
     """Agent status."""
 
     INITIALIZING = "initializing"
@@ -43,9 +43,9 @@ class AgentContext:
 
     task_id: str
     instruction: str
-    inputs: Dict[str, Any] = field(default_factory=dict)
-    outputs: Dict[str, Any] = field(default_factory=dict)
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    inputs: dict[str, Any] = field(default_factory=dict)
+    outputs: dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
     created_at: datetime = field(default_factory=datetime.now)
 
 
@@ -56,10 +56,10 @@ class SkillDefinition:
     name: str
     description: str
     instructions: str
-    triggers: List[str] = field(default_factory=list)
-    parameters: Dict[str, Any] = field(default_factory=dict)
-    examples: List[str] = field(default_factory=list)
-    source: Optional[Path] = None
+    triggers: list[str] = field(default_factory=list)
+    parameters: dict[str, Any] = field(default_factory=dict)
+    examples: list[str] = field(default_factory=list)
+    source: Path | None = None
 
 
 class BaseAgent(ABC):
@@ -77,9 +77,9 @@ class BaseAgent(ABC):
         self,
         name: str,
         role: AgentRole,
-        provider: Optional[str] = None,
-        model: Optional[str] = None,
-        skills: Optional[List[str]] = None,
+        provider: str | None = None,
+        model: str | None = None,
+        skills: list[str] | None = None,
     ) -> None:
         """Initialize agent.
 
@@ -94,11 +94,11 @@ class BaseAgent(ABC):
         self._role = role
         self._provider = provider
         self._model = model
-        self._skills: Dict[str, SkillDefinition] = {}
+        self._skills: dict[str, SkillDefinition] = {}
         self._status = AgentStatus.INITIALIZING
-        self._context: Optional[AgentContext] = None
-        self._llm_client: Optional[Any] = None
-        self._evolution_history: List[Dict[str, Any]] = []
+        self._context: AgentContext | None = None
+        self._llm_client: Any | None = None
+        self._evolution_history: list[dict[str, Any]] = []
         self._step = 0
 
         if skills:
@@ -123,17 +123,17 @@ class BaseAgent(ABC):
         return self._status
 
     @property
-    def skills(self) -> Dict[str, SkillDefinition]:
+    def skills(self) -> dict[str, SkillDefinition]:
         """Get loaded skills."""
         return self._skills
 
     @property
-    def provider(self) -> Optional[str]:
+    def provider(self) -> str | None:
         """Get LLM provider."""
         return self._provider
 
     @property
-    def model(self) -> Optional[str]:
+    def model(self) -> str | None:
         """Get model identifier."""
         return self._model
 
@@ -147,8 +147,8 @@ class BaseAgent(ABC):
     async def process(
         self,
         instruction: str,
-        inputs: Optional[Dict[str, Any]] = None,
-    ) -> Dict[str, Any]:
+        inputs: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
         """Process a task.
 
         Args:
@@ -224,17 +224,14 @@ class BaseAgent(ABC):
         parameters = {}
         examples = []
 
-        in_instructions = False
         in_triggers = False
 
         for line in lines[1:]:
             if line.startswith("## Triggers") or line.startswith("##触发"):
                 in_triggers = True
-                in_instructions = False
                 continue
             elif line.startswith("##") or line.startswith("**"):
                 in_triggers = False
-                in_instructions = False
                 continue
 
             if in_triggers and line.strip():
@@ -260,9 +257,9 @@ class BaseAgent(ABC):
 
     async def call_llm(
         self,
-        messages: List[Dict[str, Any]],
-        tools: Optional[List[Dict[str, Any]]] = None,
-    ) -> Dict[str, Any]:
+        messages: list[dict[str, Any]],
+        tools: list[dict[str, Any]] | None = None,
+    ) -> dict[str, Any]:
         """Call LLM with messages and optional tools.
 
         Args:
@@ -288,8 +285,8 @@ class BaseAgent(ABC):
     async def execute_skill(
         self,
         skill_name: str,
-        inputs: Dict[str, Any],
-    ) -> Dict[str, Any]:
+        inputs: dict[str, Any],
+    ) -> dict[str, Any]:
         """Execute a loaded skill.
 
         Args:
@@ -342,7 +339,7 @@ class BaseAgent(ABC):
     async def communicate(
         self,
         target_agent: str,
-        message: Dict[str, Any],
+        message: dict[str, Any],
     ) -> None:
         """Send message to another agent.
 

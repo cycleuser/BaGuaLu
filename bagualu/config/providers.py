@@ -3,15 +3,15 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from enum import Enum
-from typing import Any, Dict, Optional
+from enum import StrEnum
+from typing import Any
 
 from bagualu.utils.logging import Logger
 
 logger = Logger.get_logger(__name__)
 
 
-class ProviderType(str, Enum):
+class ProviderType(StrEnum):
     """Provider types."""
 
     LOCAL = "local"
@@ -24,12 +24,12 @@ class ProviderConfig:
     """Provider configuration."""
 
     name: str
-    api_key: Optional[str] = None
-    base_url: Optional[str] = None
-    model: Optional[str] = None
+    api_key: str | None = None
+    base_url: str | None = None
+    model: str | None = None
     enabled: bool = True
     provider_type: ProviderType = ProviderType.CLOUD
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
     def is_ready(self) -> bool:
         """Check if provider is ready to use."""
@@ -49,13 +49,11 @@ class ProviderConfig:
         if not self.enabled:
             return "Disabled"
 
-        if self.provider_type == ProviderType.LOCAL:
-            if not self.base_url:
-                return "Missing base URL"
+        if self.provider_type == ProviderType.LOCAL and not self.base_url:
+            return "Missing base URL"
 
-        if self.provider_type == ProviderType.CLOUD:
-            if not self.api_key:
-                return "Missing API key"
+        if self.provider_type == ProviderType.CLOUD and not self.api_key:
+            return "Missing API key"
 
         return "Not configured"
 
@@ -65,8 +63,8 @@ class MultiProviderConfig:
 
     def __init__(self) -> None:
         """Initialize multi-provider config."""
-        self._providers: Dict[str, ProviderConfig] = {}
-        self._active_provider: Optional[str] = None
+        self._providers: dict[str, ProviderConfig] = {}
+        self._active_provider: str | None = None
 
     def add_provider(
         self,
@@ -83,7 +81,7 @@ class MultiProviderConfig:
     def get_provider(
         self,
         name: str,
-    ) -> Optional[ProviderConfig]:
+    ) -> ProviderConfig | None:
         """Get provider by name.
 
         Args:
@@ -94,7 +92,7 @@ class MultiProviderConfig:
         """
         return self._providers.get(name)
 
-    def get_active_provider(self) -> Optional[ProviderConfig]:
+    def get_active_provider(self) -> ProviderConfig | None:
         """Get active provider.
 
         Returns:
@@ -127,7 +125,7 @@ class MultiProviderConfig:
 
         return False
 
-    def get_active_model(self) -> Optional[str]:
+    def get_active_model(self) -> str | None:
         """Get active provider's model.
 
         Returns:
@@ -140,7 +138,7 @@ class MultiProviderConfig:
 
         return None
 
-    def list_providers(self) -> Dict[str, ProviderConfig]:
+    def list_providers(self) -> dict[str, ProviderConfig]:
         """List all providers.
 
         Returns:
@@ -179,12 +177,12 @@ class MultiProviderConfig:
         return False
 
     @property
-    def providers(self) -> Dict[str, ProviderConfig]:
+    def providers(self) -> dict[str, ProviderConfig]:
         """Get all providers."""
         return self._providers
 
     @property
-    def active_provider(self) -> Optional[str]:
+    def active_provider(self) -> str | None:
         """Get active provider name."""
         return self._active_provider
 

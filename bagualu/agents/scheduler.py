@@ -2,14 +2,13 @@
 
 from __future__ import annotations
 
-import asyncio
-from dataclasses import dataclass, field
-from enum import Enum
-from typing import Any, Dict, List, Optional, Set
-from datetime import datetime, timedelta
 import heapq
+from dataclasses import dataclass, field
+from datetime import datetime, timedelta
+from enum import Enum, StrEnum
+from typing import Any
 
-from bagualu.agents.base import BaseAgent, AgentRole
+from bagualu.agents.base import AgentRole, BaseAgent
 from bagualu.utils.logging import Logger
 
 logger = Logger.get_logger(__name__)
@@ -25,7 +24,7 @@ class PriorityLevel(int, Enum):
     BACKGROUND = 5
 
 
-class SchedulingStrategy(str, Enum):
+class SchedulingStrategy(StrEnum):
     """Scheduling strategies."""
 
     FIFO = "fifo"
@@ -41,13 +40,13 @@ class ScheduledTask:
 
     task_id: str
     priority: PriorityLevel
-    deadline: Optional[datetime] = None
-    estimated_duration: Optional[timedelta] = None
-    required_resources: Dict[str, Any] = field(default_factory=dict)
-    dependencies: List[str] = field(default_factory=list)
-    assigned_agent: Optional[str] = None
-    scheduled_at: Optional[datetime] = None
-    completed_at: Optional[datetime] = None
+    deadline: datetime | None = None
+    estimated_duration: timedelta | None = None
+    required_resources: dict[str, Any] = field(default_factory=dict)
+    dependencies: list[str] = field(default_factory=list)
+    assigned_agent: str | None = None
+    scheduled_at: datetime | None = None
+    completed_at: datetime | None = None
 
 
 class SchedulerAgent(BaseAgent):
@@ -64,8 +63,8 @@ class SchedulerAgent(BaseAgent):
     def __init__(
         self,
         name: str,
-        provider: Optional[str] = None,
-        model: Optional[str] = None,
+        provider: str | None = None,
+        model: str | None = None,
         strategy: SchedulingStrategy = SchedulingStrategy.PRIORITY,
         max_concurrent_tasks: int = 5,
     ) -> None:
@@ -87,19 +86,19 @@ class SchedulerAgent(BaseAgent):
 
         self._strategy = strategy
         self._max_concurrent_tasks = max_concurrent_tasks
-        self._task_queue: List[ScheduledTask] = []
-        self._active_tasks: Dict[str, ScheduledTask] = {}
-        self._completed_tasks: List[ScheduledTask] = []
-        self._resource_pool: Dict[str, Set[str]] = {}
-        self._scheduling_history: List[Dict[str, Any]] = []
+        self._task_queue: list[ScheduledTask] = []
+        self._active_tasks: dict[str, ScheduledTask] = {}
+        self._completed_tasks: list[ScheduledTask] = []
+        self._resource_pool: dict[str, set[str]] = {}
+        self._scheduling_history: list[dict[str, Any]] = []
 
         logger.info(f"Scheduler agent {name} initialized with {strategy} strategy")
 
     async def process(
         self,
         instruction: str,
-        inputs: Optional[Dict[str, Any]] = None,
-    ) -> Dict[str, Any]:
+        inputs: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
         """Process scheduling request.
 
         Args:
@@ -132,8 +131,8 @@ class SchedulerAgent(BaseAgent):
 
     async def _handle_schedule_request(
         self,
-        inputs: Dict[str, Any],
-    ) -> Dict[str, Any]:
+        inputs: dict[str, Any],
+    ) -> dict[str, Any]:
         """Handle task scheduling request.
 
         Args:
@@ -175,8 +174,8 @@ class SchedulerAgent(BaseAgent):
 
     async def _handle_prioritize_request(
         self,
-        inputs: Dict[str, Any],
-    ) -> Dict[str, Any]:
+        inputs: dict[str, Any],
+    ) -> dict[str, Any]:
         """Handle task prioritization request.
 
         Args:
@@ -226,8 +225,8 @@ class SchedulerAgent(BaseAgent):
 
     async def _handle_allocate_request(
         self,
-        inputs: Dict[str, Any],
-    ) -> Dict[str, Any]:
+        inputs: dict[str, Any],
+    ) -> dict[str, Any]:
         """Handle resource allocation request.
 
         Args:
@@ -268,7 +267,7 @@ class SchedulerAgent(BaseAgent):
             "error": "No suitable task available",
         }
 
-    async def _get_next_task(self) -> Optional[ScheduledTask]:
+    async def _get_next_task(self) -> ScheduledTask | None:
         """Get next task based on scheduling strategy.
 
         Returns:
@@ -302,8 +301,8 @@ class SchedulerAgent(BaseAgent):
     async def _general_scheduling(
         self,
         instruction: str,
-        inputs: Dict[str, Any],
-    ) -> Dict[str, Any]:
+        inputs: dict[str, Any],
+    ) -> dict[str, Any]:
         """Handle general scheduling request.
 
         Args:
@@ -349,7 +348,7 @@ class SchedulerAgent(BaseAgent):
 
         return False
 
-    def _calculate_avg_completion_time(self) -> Optional[timedelta]:
+    def _calculate_avg_completion_time(self) -> timedelta | None:
         """Calculate average completion time for tasks.
 
         Returns:
@@ -385,7 +384,7 @@ class SchedulerAgent(BaseAgent):
 
             logger.info(f"Task {task_id} completed")
 
-    async def get_queue_status(self) -> Dict[str, Any]:
+    async def get_queue_status(self) -> dict[str, Any]:
         """Get current queue status.
 
         Returns:
@@ -408,7 +407,7 @@ class SchedulerAgent(BaseAgent):
             ],
         }
 
-    async def optimize_strategy(self) -> Dict[str, Any]:
+    async def optimize_strategy(self) -> dict[str, Any]:
         """Analyze and optimize scheduling strategy.
 
         Returns:
