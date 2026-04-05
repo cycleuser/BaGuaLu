@@ -75,7 +75,7 @@ class AgentCluster:
         """
         agent_id = f"agent-{name}-{datetime.now().timestamp()}"
 
-        agent_role = AgentRole(role.upper())
+        agent_role = AgentRole(role.lower())
 
         if agent_role == AgentRole.EXECUTOR:
             agent = ExecutorAgent(
