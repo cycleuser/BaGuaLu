@@ -490,21 +490,34 @@ async function refreshSkills() {
                 const response = await fetch(API_BASE + '/skills');
                 const data = await response.json();
                 const skillsList = document.getElementById('skills-list');
+                const skillListDiv = document.getElementById('skill-list');
 
-                skillsList.innerHTML = data.skills.map(skill =>
-                    '<div class="skill-item">' +
-                    '<strong>' + skill.name + '</strong> ' +
-                    '<span class="skill-source">(' + skill.source + ')</span><br>' +
-                    '<small>' + skill.description + '</small>' +
-                    '<button onclick="showSkillInfo(\\'' + skill.name + '\\')" class="btn-small">Info</button>' +
-                    '</div>'
-                ).join('');
+                if (skillsList) {
+                    skillsList.innerHTML = data.skills.map(skill =>
+                        '<div class="skill-item">' +
+                        '<strong>' + skill.name + '</strong> ' +
+                        '<span class="skill-source">(' + skill.source + ')</span><br>' +
+                        '<small>' + (skill.description || '') + '</small>' +
+                        '<button onclick="showSkillInfo(\\'' + skill.name + '\\')" class="btn-small">Info</button>' +
+                        '</div>'
+                    ).join('') || '<div class="loading">No skills found</div>';
+                }
 
-                document.getElementById('skills-count').textContent = data.total;
+                if (skillListDiv) {
+                    skillListDiv.innerHTML = data.skills.map(skill =>
+                        '<div class="skill-item">' +
+                        '<strong>' + skill.name + '</strong> ' +
+                        '<span class="skill-source">(' + skill.source + ')</span><br>' +
+                        '<small>' + (skill.description || '') + '</small>' +
+                        '<button onclick="showSkillInfo(\\'' + skill.name + '\\')" class="btn-small">Info</button>' +
+                        '</div>'
+                    ).join('') || '<div class="loading">No skills found</div>';
+                }
+
+                document.getElementById('skills-count').textContent = data.total || 0;
             } catch (error) {
                 console.error('Failed to refresh skills:', error);
             }
-        }
         }
 
         async function refreshWorkflows() {
@@ -610,10 +623,12 @@ async function refreshSkills() {
             const skillName = prompt('Skill name to evolve:');
             if (skillName) {
                 fetch(API_BASE + '/skills/' + skillName + '/evolve', {method: 'POST'})
-                    .then(() => {
-                        alert('Skill evolution triggered!');
+                    .then(r => r.json())
+                    .then(data => {
+                        alert(data.message || 'Skill evolution triggered!');
                         refreshSkills();
-                    });
+                    })
+                    .catch(err => alert('Error: ' + err.message));
             }
         }
 
@@ -671,6 +686,80 @@ async function refreshSkills() {
             if (confirm('Clear workflow canvas?')) {
                 document.getElementById('workflow-canvas').innerHTML = '';
             }
+        }
+
+        function showSkillManager() {
+            showTab('skills');
+            refreshSkills();
+        }
+
+        function showProviderSettings() {
+            showTab('settings');
+            loadProviderSettings();
+        }
+
+        async function loadProviderSettings() {
+            const data = await fetchAPI('/config');
+            if (data) {
+                const providerSelect = document.getElementById('provider-select');
+                if (data.active_provider && providerSelect) {
+                    providerSelect.value = data.active_provider;
+                }
+                const modelInput = document.getElementById('model-input');
+                if (data.model && modelInput) {
+                    modelInput.value = data.model;
+                }
+            }
+        }
+
+        function saveProviderSettings() {
+            const provider = document.getElementById('provider-select').value;
+            const model = document.getElementById('model-input').value;
+            const apiKey = document.getElementById('api-key-input').value;
+
+            fetch(API_BASE + '/config/provider', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    provider: provider,
+                    model: model,
+                    api_key: apiKey
+                })
+            }).then(r => r.json())
+              .then(data => {
+                  if (data.success) {
+                      alert('Provider settings saved successfully!');
+                  } else {
+                      alert('Failed to save: ' + (data.detail || JSON.stringify(data)));
+                  }
+              })
+              .catch(err => alert('Error: ' + err.message));
+        }
+
+        function saveSystemSettings() {
+            const maxAgents = document.getElementById('max-agents-input').value;
+            const defaultRole = document.getElementById('default-role-select').value;
+            const evolutionEnabled = document.getElementById('evolution-enabled').checked;
+            const qualityThreshold = document.getElementById('quality-threshold').value;
+
+            fetch(API_BASE + '/config/settings', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    max_concurrent_agents: parseInt(maxAgents),
+                    default_agent_role: defaultRole,
+                    evolution_enabled: evolutionEnabled,
+                    quality_threshold: parseFloat(qualityThreshold)
+                })
+            }).then(r => r.json())
+              .then(data => {
+                  if (data.success) {
+                      alert('System settings saved successfully!');
+                  } else {
+                      alert('Failed to save: ' + (data.detail || JSON.stringify(data)));
+                  }
+              })
+              .catch(err => alert('Error: ' + err.message));
         }
 
         // Initialize
