@@ -1,0 +1,61 @@
+{
+  "name": "测试生成工作流",
+  "description": "自动化测试生成和执行",
+  "nodes": [
+    {
+      "id": "scan-codebase",
+      "role": "executor",
+      "instruction": "扫描代码库，识别需要测试的函数和类",
+      "inputs": {"coverage_target": 80},
+      "position": {"x": 100, "y": 100}
+    },
+    {
+      "id": "analyze-functions",
+      "role": "executor",
+      "instruction": "分析函数签名、参数和返回值类型",
+      "inputs": {},
+      "dependencies": ["scan-codebase"],
+      "position": {"x": 350, "y": 50}
+    },
+    {
+      "id": "identify-edge-cases",
+      "role": "supervisor",
+      "instruction": "识别边界情况和异常处理场景",
+      "inputs": {},
+      "dependencies": ["analyze-functions"],
+      "position": {"x": 350, "y": 200}
+    },
+    {
+      "id": "generate-unit-tests",
+      "role": "executor",
+      "instruction": "生成单元测试代码，包括正常路径和边界情况",
+      "inputs": {"test_framework": "pytest"},
+      "dependencies": ["analyze-functions", "identify-edge-cases"],
+      "position": {"x": 600, "y": 100}
+    },
+    {
+      "id": "run-tests",
+      "role": "executor",
+      "instruction": "执行生成的测试并报告结果",
+      "inputs": {},
+      "dependencies": ["generate-unit-tests"],
+      "position": {"x": 850, "y": 100}
+    },
+    {
+      "id": "fix-failing-tests",
+      "role": "executor",
+      "instruction": "分析失败的测试并尝试修复",
+      "inputs": {},
+      "dependencies": ["run-tests"],
+      "position": {"x": 850, "y": 250}
+    }
+  ],
+  "edges": [
+    {"from": "scan-codebase", "to": "analyze-functions"},
+    {"from": "analyze-functions", "to": "identify-edge-cases"},
+    {"from": "analyze-functions", "to": "generate-unit-tests"},
+    {"from": "identify-edge-cases", "to": "generate-unit-tests"},
+    {"from": "generate-unit-tests", "to": "run-tests"},
+    {"from": "run-tests", "to": "fix-failing-tests"}
+  ]
+}

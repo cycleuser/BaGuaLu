@@ -1,0 +1,52 @@
+{
+  "name": "数据分析工作流",
+  "description": "数据处理和分析管道",
+  "nodes": [
+    {
+      "id": "extract-data",
+      "role": "executor",
+      "instruction": "从数据源提取数据，支持 Excel、CSV、JSON 格式",
+      "inputs": {"source_type": "file"},
+      "position": {"x": 100, "y": 150}
+    },
+    {
+      "id": "clean-data",
+      "role": "executor",
+      "instruction": "清洗数据：处理缺失值、异常值、格式转换",
+      "inputs": {},
+      "dependencies": ["extract-data"],
+      "position": {"x": 350, "y": 150}
+    },
+    {
+      "id": "analyze-data",
+      "role": "executor",
+      "instruction": "执行统计分析，生成洞察和趋势",
+      "inputs": {"analysis_type": "descriptive"},
+      "dependencies": ["clean-data"],
+      "position": {"x": 600, "y": 100}
+    },
+    {
+      "id": "validate-results",
+      "role": "supervisor",
+      "instruction": "验证分析结果的准确性和完整性",
+      "inputs": {},
+      "dependencies": ["analyze-data"],
+      "position": {"x": 600, "y": 250}
+    },
+    {
+      "id": "generate-report",
+      "role": "executor",
+      "instruction": "生成可视化报告和执行摘要",
+      "inputs": {"format": "markdown"},
+      "dependencies": ["analyze-data", "validate-results"],
+      "position": {"x": 850, "y": 150}
+    }
+  ],
+  "edges": [
+    {"from": "extract-data", "to": "clean-data"},
+    {"from": "clean-data", "to": "analyze-data"},
+    {"from": "analyze-data", "to": "validate-results"},
+    {"from": "analyze-data", "to": "generate-report"},
+    {"from": "validate-results", "to": "generate-report"}
+  ]
+}

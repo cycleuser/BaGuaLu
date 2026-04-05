@@ -1,0 +1,62 @@
+{
+  "name": "多智能体协作工作流",
+  "description": "展示多智能体协同完成复杂任务",
+  "nodes": [
+    {
+      "id": "task-decomposer",
+      "role": "executor",
+      "instruction": "将复杂任务分解为可执行的子任务",
+      "inputs": {},
+      "position": {"x": 100, "y": 200}
+    },
+    {
+      "id": "researcher",
+      "role": "executor",
+      "instruction": "研究子任务所需的信息和资源",
+      "inputs": {},
+      "dependencies": ["task-decomposer"],
+      "position": {"x": 350, "y": 50}
+    },
+    {
+      "id": "implementer",
+      "role": "executor",
+      "instruction": "实现具体的功能代码",
+      "inputs": {},
+      "dependencies": ["task-decomposer"],
+      "position": {"x": 350, "y": 200}
+    },
+    {
+      "id": "tester",
+      "role": "executor",
+      "instruction": "测试实现的功能",
+      "inputs": {},
+      "dependencies": ["implementer"],
+      "position": {"x": 350, "y": 350}
+    },
+    {
+      "id": "quality-supervisor",
+      "role": "supervisor",
+      "instruction": "监督所有子任务的质量，确保符合标准",
+      "inputs": {"quality_threshold": 0.85},
+      "dependencies": ["researcher", "implementer", "tester"],
+      "position": {"x": 600, "y": 200}
+    },
+    {
+      "id": "integrator",
+      "role": "executor",
+      "instruction": "整合所有子任务成果，生成最终交付物",
+      "inputs": {},
+      "dependencies": ["quality-supervisor"],
+      "position": {"x": 850, "y": 200}
+    }
+  ],
+  "edges": [
+    {"from": "task-decomposer", "to": "researcher"},
+    {"from": "task-decomposer", "to": "implementer"},
+    {"from": "implementer", "to": "tester"},
+    {"from": "researcher", "to": "quality-supervisor"},
+    {"from": "implementer", "to": "quality-supervisor"},
+    {"from": "tester", "to": "quality-supervisor"},
+    {"from": "quality-supervisor", "to": "integrator"}
+  ]
+}

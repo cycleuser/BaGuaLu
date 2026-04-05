@@ -1,0 +1,43 @@
+{
+  "name": "代码审查工作流",
+  "description": "自动代码审查和分析工作流",
+  "nodes": [
+    {
+      "id": "analyze-code",
+      "role": "executor",
+      "instruction": "分析代码库结构，识别主要组件和依赖关系",
+      "inputs": {},
+      "position": {"x": 100, "y": 100}
+    },
+    {
+      "id": "review-quality",
+      "role": "supervisor",
+      "instruction": "审查代码质量，识别潜在问题和改进建议",
+      "inputs": {},
+      "dependencies": ["analyze-code"],
+      "position": {"x": 400, "y": 100}
+    },
+    {
+      "id": "generate-tests",
+      "role": "executor",
+      "instruction": "为关键功能生成单元测试",
+      "inputs": {},
+      "dependencies": ["analyze-code"],
+      "position": {"x": 400, "y": 300}
+    },
+    {
+      "id": "create-report",
+      "role": "executor",
+      "instruction": "生成综合报告，包括质量评分和改进建议",
+      "inputs": {},
+      "dependencies": ["review-quality", "generate-tests"],
+      "position": {"x": 700, "y": 200}
+    }
+  ],
+  "edges": [
+    {"from": "analyze-code", "to": "review-quality"},
+    {"from": "analyze-code", "to": "generate-tests"},
+    {"from": "review-quality", "to": "create-report"},
+    {"from": "generate-tests", "to": "create-report"}
+  ]
+}

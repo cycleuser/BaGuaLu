@@ -1,0 +1,108 @@
+{
+  "name": "智能代码审查系统",
+  "description": "使用多智能体和条件逻辑的高级代码审查工作流",
+  "version": "1.0.0",
+  "nodes": [
+    {
+      "id": "input-1",
+      "type": "input.file",
+      "title": "📁 代码文件输入",
+      "position": {"x": 100, "y": 200},
+      "properties": {
+        "file_path": "/path/to/code.py",
+        "encoding": "utf-8"
+      }
+    },
+    {
+      "id": "json-parse-1",
+      "type": "input.json",
+      "title": "🔷 解析配置",
+      "position": {"x": 100, "y": 400},
+      "properties": {
+        "default_json": "{\"check_style\": true, \"check_security\": true, \"min_coverage\": 80}"
+      }
+    },
+    {
+      "id": "agent-analyze",
+      "type": "agent.executor",
+      "title": "🤖 代码分析",
+      "position": {"x": 400, "y": 200},
+      "properties": {
+        "provider": "ollama",
+        "model": "codellama",
+        "role": "executor",
+        "instruction": "分析代码结构、复杂度和潜在问题"
+      },
+      "dependencies": ["input-1"]
+    },
+    {
+      "id": "agent-security",
+      "type": "agent.executor",
+      "title": "🔒 安全检查",
+      "position": {"x": 400, "y": 400},
+      "properties": {
+        "provider": "ollama",
+        "model": "llama2",
+        "role": "executor",
+        "instruction": "检查代码中的安全漏洞和风险"
+      },
+      "dependencies": ["input-1"]
+    },
+    {
+      "id": "condition-security",
+      "type": "logic.condition",
+      "title": "🔀 安全评审",
+      "position": {"x": 700, "y": 400},
+      "properties": {
+        "operator": "equals",
+        "compare_value": "true"
+      },
+      "dependencies": ["json-parse-1"]
+    },
+    {
+      "id": "supervisor-review",
+      "type": "agent.supervisor",
+      "title": "👁️ 质量审核",
+      "position": {"x": 1000, "y": 300},
+      "properties": {
+        "quality_threshold": 0.85,
+        "auto_approve": false
+      },
+      "dependencies": ["agent-analyze", "agent-security"]
+    },
+    {
+      "id": "merge-results",
+      "type": "logic.merge",
+      "title": "🔗 合并结果",
+      "position": {"x": 1300, "y": 300},
+      "properties": {
+        "merge_mode": "combine"
+      },
+      "dependencies": ["supervisor-review"]
+    },
+    {
+      "id": "transform-report",
+      "type": "data.transform",
+      "title": "⚙️ 生成报告",
+      "position": {"x": 1600, "y": 300},
+      "properties": {
+        "expression": "formatReport(input)"
+      },
+      "dependencies": ["merge-results"]
+    }
+  ],
+  "edges": [
+    {"from": "input-1", "to": "agent-analyze"},
+    {"from": "input-1", "to": "agent-security"},
+    {"from": "json-parse-1", "to": "condition-security"},
+    {"from": "agent-analyze", "to": "supervisor-review"},
+    {"from": "agent-security", "to": "supervisor-review"},
+    {"from": "supervisor-review", "to": "merge-results"},
+    {"from": "merge-results", "to": "transform-report"}
+  ],
+  "metadata": {
+    "author": "BaGuaLu Team",
+    "tags": ["code-review", "security", "quality"],
+    "category": "Development"
+  }
+}

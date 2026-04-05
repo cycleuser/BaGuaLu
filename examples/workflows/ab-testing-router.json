@@ -1,0 +1,138 @@
+{
+  "name": "多路 A/B 测试工作流",
+  "description": "使用 Switch 节点实现复杂的多路分支测试",
+  "version": "1.0.0",
+  "nodes": [
+    {
+      "id": "input-user",
+      "type": "input.json",
+      "title": "👤 用户输入",
+      "position": {"x": 100, "y": 300},
+      "properties": {
+        "default_json": "{\"user_id\": \"123\", \"tier\": \"premium\", \"region\": \"us\"}"
+      }
+    },
+    {
+      "id": "switch-tier",
+      "type": "logic.switch",
+      "title": "🔣 用户等级分流",
+      "position": {"x": 400, "y": 300},
+      "properties": {
+        "cases": [
+          {"value": "free", "label": "免费用户"},
+          {"value": "basic", "label": "基础用户"},
+          {"value": "premium", "label": "高级用户"},
+          {"value": "enterprise", "label": "企业用户"}
+        ],
+        "default_case": "free"
+      },
+      "dependencies": ["input-user"]
+    },
+    {
+      "id": "agent-free",
+      "type": "agent.executor",
+      "title": "🤖 基础服务",
+      "position": {"x": 700, "y": 100},
+      "properties": {
+        "model": "llama2",
+        "instruction": "提供基础服务，限制功能"
+      },
+      "dependencies": ["switch-tier"]
+    },
+    {
+      "id": "agent-basic",
+      "type": "agent.executor",
+      "title": "🤖 标准服务",
+      "position": {"x": 700, "y": 250},
+      "properties": {
+        "model": "llama2",
+        "instruction": "提供标准服务，适度限制"
+      },
+      "dependencies": ["switch-tier"]
+    },
+    {
+      "id": "agent-premium",
+      "type": "agent.executor",
+      "title": "🤖 高级服务",
+      "position": {"x": 700, "y": 400},
+      "properties": {
+        "model": "gpt-4",
+        "instruction": "提供高级服务，优先处理"
+      },
+      "dependencies": ["switch-tier"]
+    },
+    {
+      "id": "agent-enterprise",
+      "type": "agent.executor",
+      "title": "🤖 企业专属",
+      "position": {"x": 700, "y": 550},
+      "properties": {
+        "model": "gpt-4",
+        "instruction": "提供企业专属服务，最高优先级"
+      },
+      "dependencies": ["switch-tier"]
+    },
+    {
+      "id": "condition-region",
+      "type": "logic.condition",
+      "title": "🔀 区域检查",
+      "position": {"x": 1000, "y": 300},
+      "properties": {
+        "operator": "contains",
+        "compare_value": "us"
+      },
+      "dependencies": ["input-user"]
+    },
+    {
+      "id": "transform-us",
+      "type": "data.transform",
+      "title": "⚙️ 美式格式化",
+      "position": {"x": 1300, "y": 250},
+      "properties": {
+        "expression": "formatUS(input)"
+      },
+      "dependencies": ["condition-region"]
+    },
+    {
+      "id": "transform-eu",
+      "type": "data.transform",
+      "title": "⚙️ 欧式格式化",
+      "position": {"x": 1300, "y": 400},
+      "properties": {
+        "expression": "formatEU(input)"
+      },
+      "dependencies": ["condition-region"]
+    },
+    {
+      "id": "merge-output",
+      "type": "logic.merge",
+      "title": "🔗 统一输出",
+      "position": {"x": 1600, "y": 300},
+      "properties": {
+        "merge_mode": "combine"
+      },
+      "dependencies": ["agent-free", "agent-basic", "agent-premium", "agent-enterprise", "transform-us", "transform-eu"]
+    }
+  ],
+  "edges": [
+    {"from": "input-user", "to": "switch-tier"},
+    {"from": "input-user", "to": "condition-region"},
+    {"from": "switch-tier", "to": "agent-free"},
+    {"from": "switch-tier", "to": "agent-basic"},
+    {"from": "switch-tier", "to": "agent-premium"},
+    {"from": "switch-tier", "to": "agent-enterprise"},
+    {"from": "condition-region", "to": "transform-us"},
+    {"from": "condition-region", "to": "transform-eu"},
+    {"from": "agent-free", "to": "merge-output"},
+    {"from": "agent-basic", "to": "merge-output"},
+    {"from": "agent-premium", "to": "merge-output"},
+    {"from": "agent-enterprise", "to": "merge-output"},
+    {"from": "transform-us", "to": "merge-output"},
+    {"from": "transform-eu", "to": "merge-output"}
+  ],
+  "metadata": {
+    "author": "BaGuaLu Team",
+    "tags": ["ab-testing", "routing", "personalization"],
+    "category": "Business Logic"
+  }
+}

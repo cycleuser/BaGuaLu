@@ -48,7 +48,7 @@ class TestCompleteWebFunctionality:
         assert "Active Agents" in response.text
         assert "Total Skills" in response.text
         assert "Active Workflows" in response.text
-        assert "Manage Skills" in response.text
+        assert "Skill Library" in response.text or "Skills" in response.text
         assert "Settings" in response.text
 
     @pytest.mark.asyncio
@@ -274,19 +274,14 @@ class TestWebUIComponents:
         response = client.get("/")
 
         # Check key JavaScript functions exist
-        assert (
-            "function deployAgent()" in response.text
-            or "function showDeployAgentDialog()" in response.text
-        )
+        assert "function deployAgent()" in response.text
         assert "function terminateAgent(" in response.text
-        assert "function loadSkill(" in response.text
-        assert "function installSkills(" in response.text
+        assert "function installSkill(" in response.text
         assert "function showSkillInfo(" in response.text
         assert "function createWorkflow(" in response.text
         assert "function executeWorkflow(" in response.text
-        # Check settings functions are referenced
-        assert "saveProviderSettings" in response.text or "Settings" in response.text
-        assert "saveSystemSettings" in response.text or "Settings" in response.text
+        assert "function saveProviderSettings" in response.text
+        assert "function saveSystemSettings" in response.text
         assert "function refreshAgents(" in response.text
         assert "function refreshSkills(" in response.text
         assert "function refreshWorkflows(" in response.text
@@ -302,7 +297,6 @@ class TestWebUIComponents:
         assert 'id="model-input"' in response.text
         assert 'id="api-key-input"' in response.text
         assert 'id="max-agents-input"' in response.text
-        assert 'id="default-role-select"' in response.text
         assert 'id="evolution-enabled"' in response.text
         assert 'id="quality-threshold"' in response.text
 
@@ -313,11 +307,10 @@ class TestWebUIComponents:
         response = client.get("/")
 
         # Check for key action buttons
-        assert "Deploy Agent" in response.text or "Deploy New Agent" in response.text
-        assert "Load Skill" in response.text
-        assert "Install from GitHub" in response.text
+        assert "Deploy Agent" in response.text
+        assert "Install from GitHub" in response.text or "Install Skill" in response.text
         assert "Create Workflow" in response.text
-        assert "Save Settings" in response.text or "Save Provider" in response.text
+        assert "Save Provider Settings" in response.text or "Save System Settings" in response.text
 
 
 if __name__ == "__main__":

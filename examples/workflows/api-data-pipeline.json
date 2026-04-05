@@ -1,0 +1,121 @@
+{
+  "name": "HTTP API 数据处理管道",
+  "description": "从 API 获取数据、转换、过滤并存储的完整流程",
+  "version": "1.0.0",
+  "nodes": [
+    {
+      "id": "http-get",
+      "type": "api.http",
+      "title": "🌐 获取数据",
+      "position": {"x": 100, "y": 200},
+      "properties": {
+        "method": "GET",
+        "url": "https://api.example.com/data",
+        "headers": {"Authorization": "Bearer ${API_KEY}"},
+        "timeout": 30
+      }
+    },
+    {
+      "id": "error-handler",
+      "type": "utility.error",
+      "title": "⚠️ 错误处理",
+      "position": {"x": 400, "y": 200},
+      "properties": {
+        "continue_on_error": false,
+        "error_message": "API 请求失败"
+      },
+      "dependencies": ["http-get"]
+    },
+    {
+      "id": "condition-status",
+      "type": "logic.condition",
+      "title": "🔀 状态检查",
+      "position": {"x": 700, "y": 200},
+      "properties": {
+        "operator": "equals",
+        "compare_value": "200"
+      },
+      "dependencies": ["error-handler"]
+    },
+    {
+      "id": "filter-data",
+      "type": "data.filter",
+      "title": "🔍 过滤数据",
+      "position": {"x": 1000, "y": 150},
+      "properties": {
+        "condition": "item => item.active === true && item.value > 100"
+      },
+      "dependencies": ["error-handler"]
+    },
+    {
+      "id": "transform-data",
+      "type": "data.transform",
+      "title": "⚙️ 数据转换",
+      "position": {"x": 1300, "y": 150},
+      "properties": {
+        "expression": "input.map(item => ({ id: item.id, name: item.name.toUpperCase(), value: item.value * 1.1 }))"
+      },
+      "dependencies": ["filter-data"]
+    },
+    {
+      "id": "loop-process",
+      "type": "utility.loop",
+      "title": "🔁 批量处理",
+      "position": {"x": 1600, "y": 150},
+      "properties": {
+        "batch_size": 10,
+        "parallel": true
+      },
+      "dependencies": ["transform-data"]
+    },
+    {
+      "id": "delay-rate-limit",
+      "type": "utility.delay",
+      "title": "⏱️ 速率限制",
+      "position": {"x": 1900, "y": 150},
+      "properties": {
+        "delay_ms": 1000
+      },
+      "dependencies": ["loop-process"]
+    },
+    {
+      "id": "http-post",
+      "type": "api.http",
+      "title": "💾 保存结果",
+      "position": {"x": 2200, "y": 150},
+      "properties": {
+        "method": "POST",
+        "url": "https://api.example.com/results",
+        "headers": {"Content-Type": "application/json"},
+        "timeout": 30
+      },
+      "dependencies": ["delay-rate-limit"]
+    },
+    {
+      "id": "merge-final",
+      "type": "logic.merge",
+      "title": "🔗 汇总结果",
+      "position": {"x": 2500, "y": 200},
+      "properties": {
+        "merge_mode": "combine"
+      },
+      "dependencies": ["http-post", "condition-status"]
+    }
+  ],
+  "edges": [
+    {"from": "http-get", "to": "error-handler"},
+    {"from": "error-handler", "to": "condition-status"},
+    {"from": "error-handler", "to": "filter-data"},
+    {"from": "condition-status", "to": "merge-final"},
+    {"from": "filter-data", "to": "transform-data"},
+    {"from": "transform-data", "to": "loop-process"},
+    {"from": "loop-process", "to": "delay-rate-limit"},
+    {"from": "delay-rate-limit", "to": "http-post"},
+    {"from": "http-post", "to": "merge-final"}
+  ],
+  "metadata": {
+    "author": "BaGuaLu Team",
+    "tags": ["api", "etl", "data-pipeline"],
+    "category": "Data Processing"
+  }
+}

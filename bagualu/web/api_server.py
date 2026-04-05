@@ -149,7 +149,60 @@ async def create_workflow(config: WorkflowConfig):
     if not _core_instance:
         raise HTTPException(status_code=500, detail="Core not initialized")
     workflow_id = await _core_instance.create_workflow(config.model_dump())
-    return {"workflow_id": workflow_id}
+    return {"workflow_id": workflow_id, "message": "Workflow created successfully"}
+
+
+@app.get("/workflows/examples")
+async def list_workflow_examples():
+    """List available workflow examples."""
+    import json
+    from pathlib import Path
+
+    examples_dir = Path(__file__).parent.parent.parent / "examples" / "workflows"
+    examples = []
+
+    if examples_dir.exists():
+        for file in examples_dir.glob("*.json"):
+            try:
+                data = json.loads(file.read_text())
+                examples.append(
+                    {
+                        "id": file.stem,
+                        "name": data.get("name", file.stem),
+                        "description": data.get("description", ""),
+                        "nodes_count": len(data.get("nodes", [])),
+                    }
+                )
+            except Exception:
+                continue
+
+    return {"examples": examples}
+
+
+@app.post("/workflows/load-example/{example_id}")
+async def load_workflow_example(example_id: str):
+    """Load a workflow example."""
+    import json
+    from pathlib import Path
+
+    examples_dir = Path(__file__).parent.parent.parent / "examples" / "workflows"
+    example_file = examples_dir / f"{example_id}.json"
+
+    if not example_file.exists():
+        raise HTTPException(status_code=404, detail=f"Example not found: {example_id}")
+
+    try:
+        data = json.loads(example_file.read_text())
+        global _core_instance
+        if _core_instance:
+            workflow_id = await _core_instance.create_workflow(data)
+            return {
+                "workflow_id": workflow_id,
+                "message": f"Loaded example: {data.get('name', example_id)}",
+            }
+        return {"workflow_data": data, "message": "Example loaded (not saved)"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.post("/workflows/{workflow_id}/execute")
@@ -167,9 +220,22 @@ async def list_workflows():
     """List all workflows."""
     global _core_instance
     if not _core_instance:
-        raise HTTPException(status_code=500, detail="Core not initialized")
+        return {"workflows": [], "total": 0}
     workflows = await _core_instance.workflow.list_workflows()
-    return {"workflows": workflows}
+    return {"workflows": workflows, "total": len(workflows)}
+
+
+@app.delete("/workflows/{workflow_id}")
+async def delete_workflow(workflow_id: str):
+    """Delete a workflow."""
+    global _core_instance
+    if not _core_instance:
+        raise HTTPException(status_code=400, detail="Core not initialized")
+    success = await _core_instance.workflow.delete_workflow(workflow_id)
+    return {
+        "success": success,
+        "message": "Workflow deleted" if success else "Failed to delete workflow",
+    }
 
 
 @app.post("/agents")
@@ -290,19 +356,28 @@ async def install_skills(repo_url: str, skill_name: str | None = None):
 
 @app.get("/skills/sources")
 async def list_skill_sources():
-    """List skill source directories."""
+    """List all skill sources."""
     registry = get_skill_registry()
     sources = registry.get_sources()
-
     return {
         "sources": [
             {
                 "path": str(path),
-                "name": name,
+                "source": source,
+                "count": len(registry.get_skills_by_source(source)),
             }
-            for path, name in sources
-        ]
+            for path, source in sources
+        ],
     }
+
+
+@app.post("/skills/rescan")
+async def rescan_skills():
+    """Rescan all skill directories."""
+    from bagualu.skills import rescan_skills as do_rescan
+
+    total = do_rescan()
+    return {"success": True, "total": total, "message": f"Rescanned! Found {total} skills."}
 
 
 @app.get("/skills/{skill_name}")
